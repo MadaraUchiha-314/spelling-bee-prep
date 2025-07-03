@@ -5,7 +5,6 @@ import type React from "react"
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Upload, FileText, X } from "lucide-react"
 
@@ -90,6 +89,8 @@ export function WordListUpload({ onWordsUploaded }: WordListUploadProps) {
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+        style={{ cursor: "pointer" }}
       >
         <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
         <div className="space-y-2">
@@ -98,20 +99,26 @@ export function WordListUpload({ onWordsUploaded }: WordListUploadProps) {
         </div>
 
         <div className="mt-4">
-          <Label htmlFor="file-upload" className="cursor-pointer">
-            <Button variant="outline" className="mt-2 bg-transparent">
-              Choose File
-            </Button>
-          </Label>
-          <Input
-            id="file-upload"
-            ref={fileInputRef}
-            type="file"
-            accept=".txt,text/plain"
-            onChange={handleFileInput}
-            className="hidden"
-          />
+          <Button
+            variant="outline"
+            className="mt-2 bg-transparent"
+            onClick={(e) => {
+              e.stopPropagation()
+              fileInputRef.current?.click()
+            }}
+          >
+            Choose File
+          </Button>
         </div>
+
+        <Input
+          ref={fileInputRef}
+          type="file"
+          accept=".txt,text/plain"
+          onChange={handleFileInput}
+          className="hidden"
+          style={{ display: "none" }}
+        />
       </div>
 
       {uploadedFile && (
