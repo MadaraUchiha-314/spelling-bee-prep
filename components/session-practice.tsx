@@ -139,6 +139,8 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
   }
 
   const checkSpelling = async () => {
+    if (!userSpelling.trim()) return
+
     const correct = userSpelling.toLowerCase().trim() === currentWord.toLowerCase()
     setIsCorrect(correct)
 
@@ -159,6 +161,7 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
       }
     } catch (err) {
       setError("Failed to save attempt")
+      return
     }
 
     if (correct) {
@@ -424,10 +427,10 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
               </Alert>
             )}
 
-            {/* Next Word Button */}
-            {isCorrect !== null && (
-              <div className="flex justify-center">
-                <Button onClick={nextWord} className="flex items-center gap-2">
+            {/* Next Word Button - Always show when feedback is available */}
+            {feedback && isCorrect !== null && (
+              <div className="flex justify-center pt-4">
+                <Button onClick={nextWord} className="flex items-center gap-2" size="lg">
                   <RotateCcw className="w-4 h-4" />
                   {currentWordIndex < currentSession.wordsAsked.length - 1 ? "Next Word" : "Complete Session"}
                 </Button>
