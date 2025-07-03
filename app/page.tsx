@@ -8,7 +8,9 @@ import { SavedWordLists } from "@/components/saved-word-lists"
 import { ApiKeyManager } from "@/components/api-key-manager"
 import { WordPractice } from "@/components/word-practice"
 import { WordFilter } from "@/components/word-filter"
-import { BookOpen, Settings, Play, Archive } from "lucide-react"
+import { TestSessionComponent } from "@/components/test-session"
+import { SessionHistory } from "@/components/session-history"
+import { BookOpen, Settings, Play, Archive, Trophy, History } from "lucide-react"
 
 export default function SpellingBeeApp() {
   const [words, setWords] = useState<string[]>([])
@@ -16,6 +18,7 @@ export default function SpellingBeeApp() {
   const [apiKey, setApiKey] = useState<string>("")
   const [activeTab, setActiveTab] = useState("upload")
   const [currentListName, setCurrentListName] = useState<string>("")
+  const [currentListId, setCurrentListId] = useState<string>("")
 
   useEffect(() => {
     // Load API key from localStorage on component mount
@@ -29,6 +32,7 @@ export default function SpellingBeeApp() {
     setWords(uploadedWords)
     setFilteredWords(uploadedWords)
     setCurrentListName(fileName || "Uploaded List")
+    setCurrentListId("")
     setActiveTab("practice")
   }
 
@@ -41,10 +45,11 @@ export default function SpellingBeeApp() {
     localStorage.setItem("spelling-bee-api-key", key)
   }
 
-  const handleSavedListSelected = (selectedWords: string[], listName: string) => {
+  const handleSavedListSelected = (selectedWords: string[], listName: string, listId?: string) => {
     setWords(selectedWords)
     setFilteredWords(selectedWords)
     setCurrentListName(listName)
+    setCurrentListId(listId || "")
     setActiveTab("practice")
   }
 
@@ -57,7 +62,7 @@ export default function SpellingBeeApp() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="upload" className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
               Upload
@@ -69,6 +74,14 @@ export default function SpellingBeeApp() {
             <TabsTrigger value="practice" className="flex items-center gap-2">
               <Play className="w-4 h-4" />
               Practice
+            </TabsTrigger>
+            <TabsTrigger value="test" className="flex items-center gap-2">
+              <Trophy className="w-4 h-4" />
+              Test Session
+            </TabsTrigger>
+            <TabsTrigger value="history" className="flex items-center gap-2">
+              <History className="w-4 h-4" />
+              History
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
@@ -89,7 +102,7 @@ export default function SpellingBeeApp() {
           </TabsContent>
 
           <TabsContent value="saved" className="space-y-6">
-            <SavedWordLists onWordListSelected={handleSavedListSelected} />
+            <SavedWordLists onWordListSelected={(words, name, id) => handleSavedListSelected(words, name, id)} />
           </TabsContent>
 
           <TabsContent value="practice" className="space-y-6">
@@ -117,6 +130,14 @@ export default function SpellingBeeApp() {
                 <WordPractice words={filteredWords} apiKey={apiKey} />
               </>
             )}
+          </TabsContent>
+
+          <TabsContent value="test" className="space-y-6">
+            <TestSessionComponent words={words} wordListName={currentListName} wordListId={currentListId} apiKey={apiKey} />
+          </TabsContent>
+
+          <TabsContent value="history" className="space-y-6">
+            <SessionHistory />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">

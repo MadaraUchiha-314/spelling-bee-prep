@@ -1,3 +1,5 @@
+import { openDatabase } from "./idb"
+
 export interface SavedWordList {
   id: string
   name: string
@@ -7,30 +9,14 @@ export interface SavedWordList {
 }
 
 class WordListStorage {
-  private dbName = "SpellingBeeDB"
-  private version = 1
   private storeName = "wordLists"
 
-  private async openDB(): Promise<IDBDatabase> {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.dbName, this.version)
-
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => resolve(request.result)
-
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result
-        if (!db.objectStoreNames.contains(this.storeName)) {
-          const store = db.createObjectStore(this.storeName, { keyPath: "id" })
-          store.createIndex("name", "name", { unique: false })
-          store.createIndex("createdAt", "createdAt", { unique: false })
-        }
-      }
-    })
+  private async db() {
+    return openDatabase()
   }
 
   async saveWordList(name: string, words: string[]): Promise<string> {
-    const db = await this.openDB()
+    const db = await this.db()
     const id = `wordlist_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
     const wordList: SavedWordList = {
@@ -42,78 +28,58 @@ class WordListStorage {
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], "readwrite")
-      const store = transaction.objectStore(this.storeName)
-      const request = store.add(wordList)
+      const tx = db.transaction([this.storeName], "readwrite")
+      const store = tx.objectStore(this.storeName)
+      const req = store.add(wordList)
 
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => resolve(id)
+      req.onerror = () => reject(req.error)
+      req.onsuccess = () => resolve(id)
     })
   }
 
   async getAllWordLists(): Promise<SavedWordList[]> {
-    const db = await this.openDB()
-
+    const db = await this.db()
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], "readonly")
-      const store = transaction.objectStore(this.storeName)
-      const request = store.getAll()
+      const req = db.transaction([this.storeName], "readonly").objectStore(this.storeName).getAll()
+      req.onerror = () => reject(req.error)
+      req.onsuccess = () =>
+        resolve(req.result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))
+    })
+  }
 
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => {
-        const results = request.result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        resolve(results)
+  async getWordList(id: string) {
+    const db = await this.db()
+    return new Promise<SavedWordList | null>((resolve, reject) => {
+      const req = db.transaction([this.storeName], "readonly").objectStore(this.storeName).get(id)
+      req.onerror = () => reject(req.error)
+      req.onsuccess = () => resolve(req.result || null)
+    })
+  }
+
+  async deleteWordList(id: string) {
+    const db = await this.db()
+    return new Promise<void>((resolve, reject) => {
+      const req = db.transaction([this.storeName], "readwrite").objectStore(this.storeName).delete(id)
+      req.onerror = () => reject(req.error)
+      req.onsuccess = () => resolve()
+    })
+  }
+
+  async updateWordListName(id: string, newName: string) {
+    const db = await this.db()
+    return new Promise<void>((resolve, reject) => {
+      const store = db.transaction([this.storeName], "readwrite").objectStore(this.storeName)
+      const getReq = store.get(id)
+
+      getReq.onerror = () => reject(getReq.error)
+      getReq.onsuccess = () => {
+        const data = getReq.result
+        if (!data) return reject(new Error("Word list not found"))
+        data.name = newName
+        const putReq = store.put(data)
+        putReq.onerror = () => reject(putReq.error)
+        putReq.onsuccess = () => resolve()
       }
-    })
-  }
-
-  async getWordList(id: string): Promise<SavedWordList | null> {
-    const db = await this.openDB()
-
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], "readonly")
-      const store = transaction.objectStore(this.storeName)
-      const request = store.get(id)
-
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => resolve(request.result || null)
-    })
-  }
-
-  async deleteWordList(id: string): Promise<void> {
-    const db = await this.openDB()
-
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], "readwrite")
-      const store = transaction.objectStore(this.storeName)
-      const request = store.delete(id)
-
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => resolve()
-    })
-  }
-
-  async updateWordListName(id: string, newName: string): Promise<void> {
-    const db = await this.openDB()
-
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], "readwrite")
-      const store = transaction.objectStore(this.storeName)
-      const getRequest = store.get(id)
-
-      getRequest.onsuccess = () => {
-        const wordList = getRequest.result
-        if (wordList) {
-          wordList.name = newName
-          const updateRequest = store.put(wordList)
-          updateRequest.onerror = () => reject(updateRequest.error)
-          updateRequest.onsuccess = () => resolve()
-        } else {
-          reject(new Error("Word list not found"))
-        }
-      }
-
-      getRequest.onerror = () => reject(getRequest.error)
     })
   }
 }

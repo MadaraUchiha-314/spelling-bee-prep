@@ -31,7 +31,7 @@ import { BookOpen, Trash2, Edit, Calendar, FileText, Download, RefreshCw } from 
 import { wordListStorage, type SavedWordList } from "@/lib/word-list-storage"
 
 interface SavedWordListsProps {
-  onWordListSelected: (words: string[], name: string) => void
+  onWordListSelected: (words: string[], name: string, id?: string) => void
 }
 
 export function SavedWordLists({ onWordListSelected }: SavedWordListsProps) {
@@ -61,7 +61,7 @@ export function SavedWordLists({ onWordListSelected }: SavedWordListsProps) {
 
   const handleSelectList = async (list: SavedWordList) => {
     try {
-      onWordListSelected(list.words, list.name)
+      onWordListSelected(list.words, list.name, list.id)
     } catch (err) {
       setError("Failed to load word list")
     }
