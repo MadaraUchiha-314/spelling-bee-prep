@@ -5,17 +5,31 @@ import type React from "react"
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Upload, FileText, X } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Upload, FileText, X, Save } from "lucide-react"
+import { wordListStorage } from "@/lib/word-list-storage"
 
 interface WordListUploadProps {
-  onWordsUploaded: (words: string[]) => void
+  onWordsUploaded: (words: string[], fileName?: string) => void
 }
 
 export function WordListUpload({ onWordsUploaded }: WordListUploadProps) {
   const [dragActive, setDragActive] = useState(false)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [error, setError] = useState<string>("")
+  const [showSaveDialog, setShowSaveDialog] = useState(false)
+  const [saveListName, setSaveListName] = useState("")
+  const [currentWords, setCurrentWords] = useState<string[]>([])
+  const [saving, setSaving] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleDrag = (e: React.DragEvent) => {
@@ -66,7 +80,13 @@ export function WordListUpload({ onWordsUploaded }: WordListUploadProps) {
       }
 
       setUploadedFile(file)
-      onWordsUploaded(words)
+      setCurrentWords(words)
+
+      // Set default save name from filename
+      const defaultName = file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ")
+      setSaveListName(defaultName)
+
+      onWordsUploaded(words, file.name)
     } catch (err) {
       setError("Error reading file")
     }
@@ -74,8 +94,26 @@ export function WordListUpload({ onWordsUploaded }: WordListUploadProps) {
 
   const clearFile = () => {
     setUploadedFile(null)
+    setCurrentWords([])
+    setSaveListName("")
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
+    }
+  }
+
+  const handleSaveWordList = async () => {
+    if (!saveListName.trim() || currentWords.length === 0) return
+
+    try {
+      setSaving(true)
+      await wordListStorage.saveWordList(saveListName.trim(), currentWords)
+      setShowSaveDialog(false)
+      setSaveListName("")
+      // Show success message or toast here if desired
+    } catch (err) {
+      setError("Failed to save word list")
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -125,11 +163,25 @@ export function WordListUpload({ onWordsUploaded }: WordListUploadProps) {
         <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-green-600" />
-            <span className="text-sm font-medium text-green-800">{uploadedFile.name}</span>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-green-800">{uploadedFile.name}</span>
+              <span className="text-xs text-green-600">{currentWords.length} words loaded</span>
+            </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={clearFile} className="text-green-600 hover:text-green-800">
-            <X className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSaveDialog(true)}
+              className="flex items-center gap-1 text-green-600 hover:text-green-700"
+            >
+              <Save className="w-3 h-3" />
+              Save
+            </Button>
+            <Button variant="ghost" size="sm" onClick={clearFile} className="text-green-600 hover:text-green-800">
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       )}
 
@@ -138,6 +190,33 @@ export function WordListUpload({ onWordsUploaded }: WordListUploadProps) {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
+
+      <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Save Word List</DialogTitle>
+            <DialogDescription>Give your word list a name to save it for future use.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="list-name">Word List Name</Label>
+            <Input
+              id="list-name"
+              value={saveListName}
+              onChange={(e) => setSaveListName(e.target.value)}
+              placeholder="Enter a name for this word list..."
+            />
+            <p className="text-sm text-gray-500">This list contains {currentWords.length} words</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSaveDialog(false)} disabled={saving}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveWordList} disabled={!saveListName.trim() || saving}>
+              {saving ? "Saving..." : "Save Word List"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

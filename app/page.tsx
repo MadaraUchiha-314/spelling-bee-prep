@@ -4,16 +4,18 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { WordListUpload } from "@/components/word-list-upload"
+import { SavedWordLists } from "@/components/saved-word-lists"
 import { ApiKeyManager } from "@/components/api-key-manager"
 import { WordPractice } from "@/components/word-practice"
 import { WordFilter } from "@/components/word-filter"
-import { BookOpen, Settings, Play } from "lucide-react"
+import { BookOpen, Settings, Play, Archive } from "lucide-react"
 
 export default function SpellingBeeApp() {
   const [words, setWords] = useState<string[]>([])
   const [filteredWords, setFilteredWords] = useState<string[]>([])
   const [apiKey, setApiKey] = useState<string>("")
   const [activeTab, setActiveTab] = useState("upload")
+  const [currentListName, setCurrentListName] = useState<string>("")
 
   useEffect(() => {
     // Load API key from localStorage on component mount
@@ -23,9 +25,10 @@ export default function SpellingBeeApp() {
     }
   }, [])
 
-  const handleWordsUploaded = (uploadedWords: string[]) => {
+  const handleWordsUploaded = (uploadedWords: string[], fileName?: string) => {
     setWords(uploadedWords)
     setFilteredWords(uploadedWords)
+    setCurrentListName(fileName || "Uploaded List")
     setActiveTab("practice")
   }
 
@@ -38,6 +41,13 @@ export default function SpellingBeeApp() {
     localStorage.setItem("spelling-bee-api-key", key)
   }
 
+  const handleSavedListSelected = (selectedWords: string[], listName: string) => {
+    setWords(selectedWords)
+    setFilteredWords(selectedWords)
+    setCurrentListName(listName)
+    setActiveTab("practice")
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="max-w-6xl mx-auto">
@@ -47,10 +57,14 @@ export default function SpellingBeeApp() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="upload" className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
-              Word Lists
+              Upload
+            </TabsTrigger>
+            <TabsTrigger value="saved" className="flex items-center gap-2">
+              <Archive className="w-4 h-4" />
+              Saved Lists
             </TabsTrigger>
             <TabsTrigger value="practice" className="flex items-center gap-2">
               <Play className="w-4 h-4" />
@@ -74,18 +88,31 @@ export default function SpellingBeeApp() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="saved" className="space-y-6">
+            <SavedWordLists onWordListSelected={handleSavedListSelected} />
+          </TabsContent>
+
           <TabsContent value="practice" className="space-y-6">
             {words.length === 0 ? (
               <Card>
                 <CardContent className="pt-6">
                   <div className="text-center text-gray-500">
                     <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>Please upload a word list first to start practicing.</p>
+                    <p className="text-lg font-medium mb-2">No word list selected</p>
+                    <p>Please upload a new word list or select a saved one to start practicing.</p>
                   </div>
                 </CardContent>
               </Card>
             ) : (
               <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Current Word List</CardTitle>
+                    <CardDescription>
+                      {currentListName} - {words.length} words total
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
                 <WordFilter words={words} onWordsFiltered={handleWordsFiltered} />
                 <WordPractice words={filteredWords} apiKey={apiKey} />
               </>
