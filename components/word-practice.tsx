@@ -12,12 +12,13 @@ import {
   BookOpen,
   FileText,
   MessageSquare,
-  RotateCcw,
   CheckCircle,
   XCircle,
-  Shuffle,
+  RotateCcw,
   Eye,
   EyeOff,
+  ArrowRight,
+  ArrowLeft,
 } from "lucide-react"
 
 interface WordData {
@@ -41,6 +42,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
   const [userSpelling, setUserSpelling] = useState("")
   const [feedback, setFeedback] = useState("")
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
+  const [hasCheckedSpelling, setHasCheckedSpelling] = useState(false)
   const [showDefinition, setShowDefinition] = useState(false)
   const [showEtymology, setShowEtymology] = useState(false)
   const [showPartOfSpeech, setShowPartOfSpeech] = useState(false)
@@ -48,36 +50,32 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
   const [showWord, setShowWord] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const [shuffledWords, setShuffledWords] = useState<string[]>([])
-
-  // Shuffle words when component mounts or words change
-  useEffect(() => {
-    if (words.length > 0) {
-      const shuffled = [...words].sort(() => Math.random() - 0.5)
-      setShuffledWords(shuffled)
-      setCurrentWordIndex(0)
-    }
-  }, [words])
+  const [correctCount, setCorrectCount] = useState(0)
+  const [incorrectCount, setIncorrectCount] = useState(0)
 
   // Set current word when index changes
   useEffect(() => {
-    if (shuffledWords.length > 0) {
-      setCurrentWord(shuffledWords[currentWordIndex])
+    if (words.length > 0 && currentWordIndex < words.length) {
+      setCurrentWord(words[currentWordIndex])
       resetWordState()
     }
-  }, [currentWordIndex, shuffledWords])
+  }, [currentWordIndex, words])
 
   const resetWordState = () => {
     setWordData(null)
     setUserSpelling("")
-    setFeedback("")
-    setIsCorrect(null)
+    setHasCheckedSpelling(false)
     setShowDefinition(false)
     setShowEtymology(false)
     setShowPartOfSpeech(false)
     setShowExample(false)
     setShowWord(false)
     setError("")
+  }
+
+  const clearFeedback = () => {
+    setFeedback("")
+    setIsCorrect(null)
   }
 
   const fetchWordData = async (word: string) => {
@@ -132,12 +130,17 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
   }
 
   const checkSpelling = () => {
+    if (!userSpelling.trim()) return
+
     const correct = userSpelling.toLowerCase().trim() === currentWord.toLowerCase()
     setIsCorrect(correct)
+    setHasCheckedSpelling(true)
 
     if (correct) {
+      setCorrectCount((prev) => prev + 1)
       setFeedback("Correct! Well done!")
     } else {
+      setIncorrectCount((prev) => prev + 1)
       // Provide detailed feedback
       const userWord = userSpelling.toLowerCase().trim()
       const correctWord = currentWord.toLowerCase()
@@ -175,21 +178,28 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
   }
 
   const nextWord = () => {
-    if (currentWordIndex < shuffledWords.length - 1) {
+    clearFeedback() // Clear feedback before moving to next word
+    if (currentWordIndex < words.length - 1) {
       setCurrentWordIndex(currentWordIndex + 1)
     } else {
-      // Reshuffle and start over
-      const reshuffled = [...words].sort(() => Math.random() - 0.5)
-      setShuffledWords(reshuffled)
+      // Wrap around to beginning
       setCurrentWordIndex(0)
     }
   }
 
-  const reshuffleWords = () => {
-    const reshuffled = [...words].sort(() => Math.random() - 0.5)
-    setShuffledWords(reshuffled)
-    setCurrentWordIndex(0)
+  const skipWord = () => {
+    clearFeedback() // Clear feedback when skipping
+    nextWord()
   }
+
+  const previousWord = () => {
+    clearFeedback() // Clear feedback when going back
+    if (currentWordIndex > 0) {
+      setCurrentWordIndex(currentWordIndex - 1)
+    }
+  }
+
+  const accuracy = correctCount + incorrectCount > 0 ? (correctCount / (correctCount + incorrectCount)) * 100 : 0
 
   if (words.length === 0) {
     return (
@@ -197,7 +207,8 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
         <CardContent className="pt-6">
           <div className="text-center text-gray-500">
             <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>No words available for practice.</p>
+            <p className="text-lg font-medium mb-2">No words to practice</p>
+            <p>Please upload a word list or adjust your filters.</p>
           </div>
         </CardContent>
       </Card>
@@ -206,24 +217,54 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
 
   return (
     <div className="space-y-6">
+      {/* Practice Header */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Word Practice</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5" />
+                Practice Mode
+              </CardTitle>
               <CardDescription>
-                Word {currentWordIndex + 1} of {shuffledWords.length}
+                Word {currentWordIndex + 1} of {words.length}
               </CardDescription>
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{correctCount}</div>
+                <div className="text-xs text-gray-500">Correct</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-red-600">{incorrectCount}</div>
+                <div className="text-xs text-gray-500">Incorrect</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{Math.round(accuracy)}%</div>
+                <div className="text-xs text-gray-500">Accuracy</div>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+
+      {/* Word Practice */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>
+              Current Word ({currentWordIndex + 1} of {words.length})
+            </CardTitle>
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={reshuffleWords}
+                onClick={previousWord}
+                disabled={currentWordIndex === 0}
                 className="flex items-center gap-2 bg-transparent"
               >
-                <Shuffle className="w-4 h-4" />
-                Reshuffle
+                <ArrowLeft className="w-4 h-4" />
+                Previous
               </Button>
               <Button
                 variant="outline"
@@ -233,6 +274,15 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
               >
                 {showWord ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 {showWord ? "Hide" : "Show"} Word
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={skipWord}
+                className="flex items-center gap-2 text-orange-600 hover:text-orange-700 bg-transparent"
+              >
+                <ArrowRight className="w-4 h-4" />
+                Skip
               </Button>
             </div>
           </div>
@@ -364,10 +414,11 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
                   value={userSpelling}
                   onChange={(e) => setUserSpelling(e.target.value)}
                   placeholder="Type the word here..."
-                  onKeyPress={(e) => e.key === "Enter" && checkSpelling()}
+                  onKeyPress={(e) => e.key === "Enter" && !hasCheckedSpelling && checkSpelling()}
                   className="flex-1"
+                  disabled={hasCheckedSpelling}
                 />
-                <Button onClick={checkSpelling} disabled={!userSpelling.trim()}>
+                <Button onClick={checkSpelling} disabled={!userSpelling.trim() || hasCheckedSpelling}>
                   Check
                 </Button>
               </div>
@@ -375,27 +426,51 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
 
             {/* Feedback */}
             {feedback && (
-              <Alert variant={isCorrect ? "default" : "destructive"}>
+              <Alert
+                variant={isCorrect ? "default" : "destructive"}
+                className={isCorrect ? "border-green-200 bg-green-50" : ""}
+              >
                 <div className="flex items-center gap-2">
                   {isCorrect ? (
                     <CheckCircle className="w-4 h-4 text-green-600" />
                   ) : (
                     <XCircle className="w-4 h-4 text-red-600" />
                   )}
-                  <AlertDescription>{feedback}</AlertDescription>
+                  <AlertDescription className={isCorrect ? "text-green-800" : ""}>{feedback}</AlertDescription>
                 </div>
               </Alert>
             )}
 
-            {/* Next Word Button */}
-            {isCorrect !== null && (
-              <div className="flex justify-center">
-                <Button onClick={nextWord} className="flex items-center gap-2">
+            {/* Next Word Button - Show after checking spelling OR always show a navigation option */}
+            <div className="flex justify-center gap-4 pt-4">
+              <Button
+                variant="outline"
+                onClick={previousWord}
+                disabled={currentWordIndex === 0}
+                className="flex items-center gap-2 bg-transparent"
+                size="lg"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Previous
+              </Button>
+
+              {hasCheckedSpelling ? (
+                <Button onClick={nextWord} className="flex items-center gap-2" size="lg">
                   <RotateCcw className="w-4 h-4" />
                   Next Word
                 </Button>
-              </div>
-            )}
+              ) : (
+                <Button
+                  onClick={skipWord}
+                  variant="outline"
+                  className="flex items-center gap-2 bg-transparent"
+                  size="lg"
+                >
+                  <ArrowRight className="w-4 h-4" />
+                  Skip Word
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

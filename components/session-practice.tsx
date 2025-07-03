@@ -28,6 +28,7 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
+  ArrowLeft,
 } from "lucide-react"
 import { sessionStorage, type TestSession, type WordAttempt } from "@/lib/session-storage"
 
@@ -221,6 +222,13 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
     nextWord()
   }
 
+  const previousWord = () => {
+    clearFeedback() // Clear feedback when going back
+    if (currentWordIndex > 0) {
+      setCurrentWordIndex(currentWordIndex - 1)
+    }
+  }
+
   const completeSession = async () => {
     try {
       await sessionStorage.completeSession(currentSession.id)
@@ -279,6 +287,16 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
               Current Word ({currentWordIndex + 1} of {currentSession.wordsAsked.length})
             </CardTitle>
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={previousWord}
+                disabled={currentWordIndex === 0}
+                className="flex items-center gap-2 bg-transparent"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Previous
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -456,6 +474,17 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
 
             {/* Next Word Button - Show after checking spelling OR always show a navigation option */}
             <div className="flex justify-center gap-4 pt-4">
+              <Button
+                variant="outline"
+                onClick={previousWord}
+                disabled={currentWordIndex === 0}
+                className="flex items-center gap-2 bg-transparent"
+                size="lg"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Previous
+              </Button>
+
               {hasCheckedSpelling ? (
                 <Button onClick={nextWord} className="flex items-center gap-2" size="lg">
                   <RotateCcw className="w-4 h-4" />
