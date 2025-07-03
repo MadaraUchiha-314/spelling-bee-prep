@@ -27,6 +27,7 @@ import {
   RotateCcw,
   Eye,
   EyeOff,
+  ArrowRight,
 } from "lucide-react"
 import { sessionStorage, type TestSession, type WordAttempt } from "@/lib/session-storage"
 
@@ -52,6 +53,7 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
   const [userSpelling, setUserSpelling] = useState("")
   const [feedback, setFeedback] = useState("")
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
+  const [hasCheckedSpelling, setHasCheckedSpelling] = useState(false)
   const [showDefinition, setShowDefinition] = useState(false)
   const [showEtymology, setShowEtymology] = useState(false)
   const [showPartOfSpeech, setShowPartOfSpeech] = useState(false)
@@ -62,23 +64,20 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
   const [currentSession, setCurrentSession] = useState<TestSession>(session)
   const [showCompletionDialog, setShowCompletionDialog] = useState(false)
 
+  // Set current word when index changes
   useEffect(() => {
-    if (currentSession.wordsAsked.length > 0) {
+    if (currentSession.wordsAsked.length > 0 && currentWordIndex < currentSession.wordsAsked.length) {
       setCurrentWord(currentSession.wordsAsked[currentWordIndex])
       resetWordState()
     }
   }, [currentWordIndex, currentSession.wordsAsked])
-
-  useEffect(() => {
-    // Update local session state when attempts are added, but don't reset word
-    // This effect handles session updates without interfering with word progression
-  }, [])
 
   const resetWordState = () => {
     setWordData(null)
     setUserSpelling("")
     setFeedback("")
     setIsCorrect(null)
+    setHasCheckedSpelling(false)
     setShowDefinition(false)
     setShowEtymology(false)
     setShowPartOfSpeech(false)
@@ -143,6 +142,7 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
 
     const correct = userSpelling.toLowerCase().trim() === currentWord.toLowerCase()
     setIsCorrect(correct)
+    setHasCheckedSpelling(true)
 
     const attempt: WordAttempt = {
       word: currentWord,
@@ -212,6 +212,11 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
     }
   }
 
+  const skipWord = () => {
+    // Allow skipping without checking spelling
+    nextWord()
+  }
+
   const completeSession = async () => {
     try {
       await sessionStorage.completeSession(currentSession.id)
@@ -222,9 +227,11 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
     }
   }
 
-  const progress = ((currentWordIndex + (isCorrect !== null ? 1 : 0)) / currentSession.wordsAsked.length) * 100
+  const progress = ((currentWordIndex + (hasCheckedSpelling ? 1 : 0)) / currentSession.wordsAsked.length) * 100
   const accuracy =
     currentSession.attempts.length > 0 ? (currentSession.correctCount / currentSession.attempts.length) * 100 : 0
+
+  const isLastWord = currentWordIndex >= currentSession.wordsAsked.length - 1
 
   return (
     <div className="space-y-6">
@@ -265,15 +272,26 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Current Word</CardTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowWord(!showWord)}
-              className="flex items-center gap-2"
-            >
-              {showWord ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              {showWord ? "Hide" : "Show"} Word
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowWord(!showWord)}
+                className="flex items-center gap-2"
+              >
+                {showWord ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showWord ? "Hide" : "Show"} Word
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={skipWord}
+                className="flex items-center gap-2 text-orange-600 hover:text-orange-700 bg-transparent"
+              >
+                <ArrowRight className="w-4 h-4" />
+                Skip
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -403,11 +421,11 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
                   value={userSpelling}
                   onChange={(e) => setUserSpelling(e.target.value)}
                   placeholder="Type the word here..."
-                  onKeyPress={(e) => e.key === "Enter" && checkSpelling()}
+                  onKeyPress={(e) => e.key === "Enter" && !hasCheckedSpelling && checkSpelling()}
                   className="flex-1"
-                  disabled={isCorrect !== null}
+                  disabled={hasCheckedSpelling}
                 />
-                <Button onClick={checkSpelling} disabled={!userSpelling.trim() || isCorrect !== null}>
+                <Button onClick={checkSpelling} disabled={!userSpelling.trim() || hasCheckedSpelling}>
                   Check
                 </Button>
               </div>
@@ -427,15 +445,25 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
               </Alert>
             )}
 
-            {/* Next Word Button - Always show when feedback is available */}
-            {feedback && isCorrect !== null && (
-              <div className="flex justify-center pt-4">
+            {/* Next Word Button - Show after checking spelling OR always show a navigation option */}
+            <div className="flex justify-center gap-4 pt-4">
+              {hasCheckedSpelling ? (
                 <Button onClick={nextWord} className="flex items-center gap-2" size="lg">
                   <RotateCcw className="w-4 h-4" />
-                  {currentWordIndex < currentSession.wordsAsked.length - 1 ? "Next Word" : "Complete Session"}
+                  {isLastWord ? "Complete Session" : "Next Word"}
                 </Button>
-              </div>
-            )}
+              ) : (
+                <Button
+                  onClick={skipWord}
+                  variant="outline"
+                  className="flex items-center gap-2 bg-transparent"
+                  size="lg"
+                >
+                  <ArrowRight className="w-4 h-4" />
+                  {isLastWord ? "Complete Session" : "Skip Word"}
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
