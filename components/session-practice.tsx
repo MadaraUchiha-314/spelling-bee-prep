@@ -271,7 +271,9 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Current Word</CardTitle>
+            <CardTitle>
+              Current Word ({currentWordIndex + 1} of {currentSession.wordsAsked.length})
+            </CardTitle>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
