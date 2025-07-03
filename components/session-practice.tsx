@@ -75,8 +75,6 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
   const resetWordState = () => {
     setWordData(null)
     setUserSpelling("")
-    setFeedback("")
-    setIsCorrect(null)
     setHasCheckedSpelling(false)
     setShowDefinition(false)
     setShowEtymology(false)
@@ -84,6 +82,11 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
     setShowExample(false)
     setShowWord(false)
     setError("")
+  }
+
+  const clearFeedback = () => {
+    setFeedback("")
+    setIsCorrect(null)
   }
 
   const fetchWordData = async (word: string) => {
@@ -204,6 +207,7 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
   }
 
   const nextWord = () => {
+    clearFeedback() // Clear feedback before moving to next word
     if (currentWordIndex < currentSession.wordsAsked.length - 1) {
       setCurrentWordIndex(currentWordIndex + 1)
     } else {
@@ -213,7 +217,7 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
   }
 
   const skipWord = () => {
-    // Allow skipping without checking spelling
+    clearFeedback() // Clear feedback when skipping
     nextWord()
   }
 
@@ -435,14 +439,17 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
 
             {/* Feedback */}
             {feedback && (
-              <Alert variant={isCorrect ? "default" : "destructive"}>
+              <Alert
+                variant={isCorrect ? "default" : "destructive"}
+                className={isCorrect ? "border-green-200 bg-green-50" : ""}
+              >
                 <div className="flex items-center gap-2">
                   {isCorrect ? (
                     <CheckCircle className="w-4 h-4 text-green-600" />
                   ) : (
                     <XCircle className="w-4 h-4 text-red-600" />
                   )}
-                  <AlertDescription>{feedback}</AlertDescription>
+                  <AlertDescription className={isCorrect ? "text-green-800" : ""}>{feedback}</AlertDescription>
                 </div>
               </Alert>
             )}
