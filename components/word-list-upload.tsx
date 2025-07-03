@@ -1,0 +1,136 @@
+"use client"
+
+import type React from "react"
+
+import { useState, useRef } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Upload, FileText, X } from "lucide-react"
+
+interface WordListUploadProps {
+  onWordsUploaded: (words: string[]) => void
+}
+
+export function WordListUpload({ onWordsUploaded }: WordListUploadProps) {
+  const [dragActive, setDragActive] = useState(false)
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const [error, setError] = useState<string>("")
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true)
+    } else if (e.type === "dragleave") {
+      setDragActive(false)
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFile(e.dataTransfer.files[0])
+    }
+  }
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFile(e.target.files[0])
+    }
+  }
+
+  const handleFile = async (file: File) => {
+    setError("")
+
+    if (!file.type.includes("text") && !file.name.endsWith(".txt")) {
+      setError("Please upload a text file (.txt)")
+      return
+    }
+
+    try {
+      const text = await file.text()
+      const words = text
+        .split("\n")
+        .map((word) => word.trim())
+        .filter((word) => word.length > 0)
+        .filter((word) => /^[a-zA-Z]+$/.test(word)) // Only alphabetic characters
+
+      if (words.length === 0) {
+        setError("No valid words found in the file")
+        return
+      }
+
+      setUploadedFile(file)
+      onWordsUploaded(words)
+    } catch (err) {
+      setError("Error reading file")
+    }
+  }
+
+  const clearFile = () => {
+    setUploadedFile(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div
+        className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+          dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-gray-400"
+        }`}
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+      >
+        <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+        <div className="space-y-2">
+          <p className="text-lg font-medium">Drop your word list here, or click to browse</p>
+          <p className="text-sm text-gray-500">Upload a .txt file with one word per line</p>
+        </div>
+
+        <div className="mt-4">
+          <Label htmlFor="file-upload" className="cursor-pointer">
+            <Button variant="outline" className="mt-2 bg-transparent">
+              Choose File
+            </Button>
+          </Label>
+          <Input
+            id="file-upload"
+            ref={fileInputRef}
+            type="file"
+            accept=".txt,text/plain"
+            onChange={handleFileInput}
+            className="hidden"
+          />
+        </div>
+      </div>
+
+      {uploadedFile && (
+        <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-center gap-2">
+            <FileText className="w-4 h-4 text-green-600" />
+            <span className="text-sm font-medium text-green-800">{uploadedFile.name}</span>
+          </div>
+          <Button variant="ghost" size="sm" onClick={clearFile} className="text-green-600 hover:text-green-800">
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+    </div>
+  )
+}
