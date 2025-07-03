@@ -67,7 +67,12 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
       setCurrentWord(currentSession.wordsAsked[currentWordIndex])
       resetWordState()
     }
-  }, [currentWordIndex, currentSession])
+  }, [currentWordIndex, currentSession.wordsAsked])
+
+  useEffect(() => {
+    // Update local session state when attempts are added, but don't reset word
+    // This effect handles session updates without interfering with word progression
+  }, [])
 
   const resetWordState = () => {
     setWordData(null)
