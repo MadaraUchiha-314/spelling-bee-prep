@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { WordListUpload } from "@/components/word-list-upload"
@@ -13,6 +13,7 @@ import { SessionHistory } from "@/components/session-history"
 import { SessionPractice } from "@/components/session-practice"
 import { BookOpen, Settings, Play, Archive, Trophy, History } from "lucide-react"
 import { sessionStorage, type TestSession } from "@/lib/session-storage"
+import { wordListStorage, type SavedWordList } from "@/lib/word-list-storage"
 
 export default function SpellingBeeApp() {
   const [words, setWords] = useState<string[]>([])
@@ -22,17 +23,25 @@ export default function SpellingBeeApp() {
   const [currentListName, setCurrentListName] = useState<string>("")
   const [currentListId, setCurrentListId] = useState<string>("")
   const [currentSession, setCurrentSession] = useState<TestSession | null>(null)
+  const [savedLists, setSavedLists] = useState<SavedWordList[]>([])
+
+  const loadSavedLists = useCallback(async () => {
+    try {
+      const lists = await wordListStorage.getAllWordLists()
+      setSavedLists(lists)
+    } catch (err) {
+      console.error("Failed to load saved lists:", err)
+    }
+  }, [])
 
   useEffect(() => {
-    // Load API key from localStorage on component mount
     const savedApiKey = localStorage.getItem("spelling-bee-api-key")
     if (savedApiKey) {
       setApiKey(savedApiKey)
     }
-
-    // Check for any active sessions on app load
     loadActiveSession()
-  }, [])
+    loadSavedLists()
+  }, [loadSavedLists])
 
   const loadActiveSession = async () => {
     try {
@@ -86,7 +95,6 @@ export default function SpellingBeeApp() {
     setActiveTab("test")
   }
 
-  // If there's an active session and we're on the test tab, show the session practice
   const showSessionPractice = currentSession && activeTab === "test"
 
   return (
@@ -135,13 +143,17 @@ export default function SpellingBeeApp() {
                 <CardDescription>Upload a text file with words (one word per line) to start practicing</CardDescription>
               </CardHeader>
               <CardContent>
-                <WordListUpload onWordsUploaded={handleWordsUploaded} />
+                <WordListUpload onWordsUploaded={handleWordsUploaded} onListSaved={loadSavedLists} />
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="saved" className="space-y-6">
-            <SavedWordLists onWordListSelected={(words, name, id) => handleSavedListSelected(words, name, id)} />
+            <SavedWordLists
+              lists={savedLists}
+              onWordListSelected={handleSavedListSelected}
+              onListsUpdated={loadSavedLists}
+            />
           </TabsContent>
 
           <TabsContent value="practice" className="space-y-6">

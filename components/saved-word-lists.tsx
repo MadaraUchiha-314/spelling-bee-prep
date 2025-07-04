@@ -1,21 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,50 +21,31 @@ import {
 } from "@/components/ui/alert-dialog"
 import { BookOpen, Trash2, Edit, Calendar, FileText, Download, RefreshCw } from "lucide-react"
 import { wordListStorage, type SavedWordList } from "@/lib/word-list-storage"
+import { toast } from "sonner"
 
 interface SavedWordListsProps {
+  lists: SavedWordList[]
   onWordListSelected: (words: string[], name: string, id?: string) => void
+  onListsUpdated: () => void
 }
 
-export function SavedWordLists({ onWordListSelected }: SavedWordListsProps) {
-  const [savedLists, setSavedLists] = useState<SavedWordList[]>([])
-  const [loading, setLoading] = useState(true)
+export function SavedWordLists({ lists, onWordListSelected, onListsUpdated }: SavedWordListsProps) {
   const [error, setError] = useState("")
   const [editingList, setEditingList] = useState<SavedWordList | null>(null)
   const [newName, setNewName] = useState("")
 
-  const loadSavedLists = async () => {
-    try {
-      setLoading(true)
-      setError("")
-      const lists = await wordListStorage.getAllWordLists()
-      setSavedLists(lists)
-    } catch (err) {
-      setError("Failed to load saved word lists")
-      console.error("Error loading word lists:", err)
-    } finally {
-      setLoading(false)
-    }
+  const handleSelectList = (list: SavedWordList) => {
+    onWordListSelected(list.words, list.name, list.id)
   }
 
-  useEffect(() => {
-    loadSavedLists()
-  }, [])
-
-  const handleSelectList = async (list: SavedWordList) => {
-    try {
-      onWordListSelected(list.words, list.name, list.id)
-    } catch (err) {
-      setError("Failed to load word list")
-    }
-  }
-
-  const handleDeleteList = async (id: string) => {
+  const handleDeleteList = async (id: string, name: string) => {
     try {
       await wordListStorage.deleteWordList(id)
-      setSavedLists((prev) => prev.filter((list) => list.id !== id))
+      toast.success(`Deleted "${name}" list.`)
+      onListsUpdated()
     } catch (err) {
       setError("Failed to delete word list")
+      toast.error("Failed to delete word list.")
     }
   }
 
@@ -81,13 +54,13 @@ export function SavedWordLists({ onWordListSelected }: SavedWordListsProps) {
 
     try {
       await wordListStorage.updateWordListName(editingList.id, newName.trim())
-      setSavedLists((prev) =>
-        prev.map((list) => (list.id === editingList.id ? { ...list, name: newName.trim() } : list)),
-      )
+      toast.success(`Renamed list to "${newName.trim()}".`)
+      onListsUpdated()
       setEditingList(null)
       setNewName("")
     } catch (err) {
       setError("Failed to rename word list")
+      toast.error("Failed to rename word list.")
     }
   }
 
@@ -114,19 +87,6 @@ export function SavedWordLists({ onWordListSelected }: SavedWordListsProps) {
     URL.revokeObjectURL(url)
   }
 
-  if (loading) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-center py-8">
-            <RefreshCw className="w-6 h-6 animate-spin mr-2" />
-            <span>Loading saved word lists...</span>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
   return (
     <Card>
       <CardHeader>
@@ -137,15 +97,15 @@ export function SavedWordLists({ onWordListSelected }: SavedWordListsProps) {
               Saved Word Lists
             </CardTitle>
             <CardDescription>
-              {savedLists.length === 0
+              {lists.length === 0
                 ? "No saved word lists yet"
-                : `${savedLists.length} saved word list${savedLists.length === 1 ? "" : "s"}`}
+                : `${lists.length} saved word list${lists.length === 1 ? "" : "s"}`}
             </CardDescription>
           </div>
           <Button
             variant="outline"
             size="sm"
-            onClick={loadSavedLists}
+            onClick={onListsUpdated}
             className="flex items-center gap-2 bg-transparent"
           >
             <RefreshCw className="w-4 h-4" />
@@ -160,7 +120,7 @@ export function SavedWordLists({ onWordListSelected }: SavedWordListsProps) {
           </Alert>
         )}
 
-        {savedLists.length === 0 ? (
+        {lists.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p className="text-lg font-medium mb-2">No saved word lists</p>
@@ -168,7 +128,7 @@ export function SavedWordLists({ onWordListSelected }: SavedWordListsProps) {
           </div>
         ) : (
           <div className="space-y-3">
-            {savedLists.map((list) => (
+            {lists.map((list) => (
               <div
                 key={list.id}
                 className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
@@ -208,7 +168,12 @@ export function SavedWordLists({ onWordListSelected }: SavedWordListsProps) {
                     <Download className="w-3 h-3" />
                   </Button>
 
-                  <Dialog>
+                  <Dialog
+                    open={editingList?.id === list.id}
+                    onOpenChange={(isOpen) => {
+                      if (!isOpen) setEditingList(null)
+                    }}
+                  >
                     <DialogTrigger asChild>
                       <Button
                         variant="outline"
@@ -225,25 +190,13 @@ export function SavedWordLists({ onWordListSelected }: SavedWordListsProps) {
                     <DialogContent>
                       <DialogHeader>
                         <DialogTitle>Rename Word List</DialogTitle>
-                        <DialogDescription>Enter a new name for this word list.</DialogDescription>
                       </DialogHeader>
-                      <div className="space-y-2">
+                      <div className="space-y-2 pt-4">
                         <Label htmlFor="new-name">Name</Label>
-                        <Input
-                          id="new-name"
-                          value={newName}
-                          onChange={(e) => setNewName(e.target.value)}
-                          placeholder="Enter word list name..."
-                        />
+                        <Input id="new-name" value={newName} onChange={(e) => setNewName(e.target.value)} />
                       </div>
                       <DialogFooter>
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setEditingList(null)
-                            setNewName("")
-                          }}
-                        >
+                        <Button variant="outline" onClick={() => setEditingList(null)}>
                           Cancel
                         </Button>
                         <Button onClick={handleRenameList} disabled={!newName.trim()}>
@@ -265,15 +218,13 @@ export function SavedWordLists({ onWordListSelected }: SavedWordListsProps) {
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Word List</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete "{list.name}"? This action cannot be undone.
-                        </AlertDialogDescription>
+                        <AlertDialogTitle>Delete "{list.name}"?</AlertDialogTitle>
+                        <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
-                          onClick={() => handleDeleteList(list.id)}
+                          onClick={() => handleDeleteList(list.id, list.name)}
                           className="bg-red-600 hover:bg-red-700"
                         >
                           Delete
