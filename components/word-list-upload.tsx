@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog"
 import { Upload, FileText, X, Save } from "lucide-react"
 import { wordListStorage } from "@/lib/word-list-storage"
+import { toast } from "sonner"
 
 interface WordListUploadProps {
   onWordsUploaded: (words: string[], fileName?: string) => void
@@ -82,9 +83,10 @@ export function WordListUpload({ onWordsUploaded }: WordListUploadProps) {
       setUploadedFile(file)
       setCurrentWords(words)
 
-      // Set default save name from filename
+      // Set default save name from filename and show save dialog
       const defaultName = file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ")
       setSaveListName(defaultName)
+      setShowSaveDialog(true) // Automatically open save dialog
 
       onWordsUploaded(words, file.name)
     } catch (err) {
@@ -108,10 +110,10 @@ export function WordListUpload({ onWordsUploaded }: WordListUploadProps) {
       setSaving(true)
       await wordListStorage.saveWordList(saveListName.trim(), currentWords)
       setShowSaveDialog(false)
-      setSaveListName("")
-      // Show success message or toast here if desired
+      toast.success(`Word list "${saveListName.trim()}" saved successfully!`)
     } catch (err) {
       setError("Failed to save word list")
+      toast.error("Failed to save word list.")
     } finally {
       setSaving(false)
     }
