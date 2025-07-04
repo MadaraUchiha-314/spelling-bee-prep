@@ -74,7 +74,7 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
     setFilteredWords(filtered)
   }
 
-  /** decide what words are available after “exclude mastered” toggle */
+  /** decide what words are available after "exclude mastered" toggle */
   const updateAvailableWords = () => {
     const wordsToFilter = filteredWords.length > 0 ? filteredWords : words
     if (excludePreviouslyCorrect && masteredWords.length > 0) {

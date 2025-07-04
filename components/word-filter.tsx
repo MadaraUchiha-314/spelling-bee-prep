@@ -8,7 +8,7 @@ import { Filter, RotateCcw } from "lucide-react"
 
 interface WordFilterProps {
   words: string[]
-  onWordsFiltered: (filteredWords: string[]) => void
+  onWordsFiltered?: (filteredWords: string[]) => void
 }
 
 export function WordFilter({ words, onWordsFiltered }: WordFilterProps) {
@@ -34,7 +34,9 @@ export function WordFilter({ words, onWordsFiltered }: WordFilterProps) {
   }, [selectedLetters, words])
 
   useEffect(() => {
-    onWordsFiltered(filteredWords)
+    if (onWordsFiltered) {
+      onWordsFiltered(filteredWords)
+    }
   }, [filteredWords, onWordsFiltered])
 
   const toggleLetter = (letter: string) => {

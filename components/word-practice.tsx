@@ -21,6 +21,7 @@ import {
   ArrowLeft,
   ThumbsUp,
   ThumbsDown,
+  Headphones,
 } from "lucide-react"
 
 interface WordData {
@@ -50,6 +51,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
   const [showPartOfSpeech, setShowPartOfSpeech] = useState(false)
   const [showExample, setShowExample] = useState(false)
   const [showWord, setShowWord] = useState(false)
+  const [showPronunciation, setShowPronunciation] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [correctCount, setCorrectCount] = useState(0)
@@ -94,6 +96,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
     setShowPartOfSpeech(false)
     setShowExample(false)
     setShowWord(false)
+    setShowPronunciation(false)
     setError("")
   }
 
@@ -359,6 +362,19 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
               variant="outline"
               onClick={() => {
                 if (!wordData) fetchWordData(currentWord)
+                setShowPronunciation(!showPronunciation)
+              }}
+              disabled={loading}
+              className="flex items-center gap-2"
+            >
+              <Headphones className="w-4 h-4" />
+              Phonetic
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (!wordData) fetchWordData(currentWord)
                 setShowDefinition(!showDefinition)
               }}
               disabled={loading}
@@ -401,7 +417,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
                 setShowExample(!showExample)
               }}
               disabled={loading}
-              className="flex items-center gap-2 md:col-span-2"
+              className="flex items-center gap-2"
             >
               <MessageSquare className="w-4 h-4" />
               Usage Example
@@ -419,6 +435,13 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
 
           {wordData && (
             <div className="space-y-4">
+              {showPronunciation && wordData.pronunciation && (
+                <div className="p-4 bg-indigo-50 rounded-lg">
+                  <h4 className="font-semibold text-indigo-800 mb-2">Phonetic Spelling:</h4>
+                  <p className="text-indigo-700 font-mono text-lg">/{wordData.pronunciation}/</p>
+                </div>
+              )}
+
               {showDefinition && wordData.definition && (
                 <div className="p-4 bg-blue-50 rounded-lg">
                   <h4 className="font-semibold text-blue-800 mb-2">Definition:</h4>
