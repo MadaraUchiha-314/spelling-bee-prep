@@ -10,7 +10,9 @@ import { WordPractice } from "@/components/word-practice"
 import { WordFilter } from "@/components/word-filter"
 import { TestSessionComponent } from "@/components/test-session"
 import { SessionHistory } from "@/components/session-history"
+import { SessionPractice } from "@/components/session-practice"
 import { BookOpen, Settings, Play, Archive, Trophy, History } from "lucide-react"
+import { sessionStorage, type TestSession } from "@/lib/session-storage"
 
 export default function SpellingBeeApp() {
   const [words, setWords] = useState<string[]>([])
@@ -19,6 +21,7 @@ export default function SpellingBeeApp() {
   const [activeTab, setActiveTab] = useState("upload")
   const [currentListName, setCurrentListName] = useState<string>("")
   const [currentListId, setCurrentListId] = useState<string>("")
+  const [currentSession, setCurrentSession] = useState<TestSession | null>(null)
 
   useEffect(() => {
     // Load API key from localStorage on component mount
@@ -26,7 +29,22 @@ export default function SpellingBeeApp() {
     if (savedApiKey) {
       setApiKey(savedApiKey)
     }
+
+    // Check for any active sessions on app load
+    loadActiveSession()
   }, [])
+
+  const loadActiveSession = async () => {
+    try {
+      const sessions = await sessionStorage.getAllSessions()
+      const activeSession = sessions.find((session) => !session.isCompleted)
+      if (activeSession) {
+        setCurrentSession(activeSession)
+      }
+    } catch (err) {
+      console.error("Error loading active session:", err)
+    }
+  }
 
   const handleWordsUploaded = (uploadedWords: string[], fileName?: string) => {
     setWords(uploadedWords)
@@ -53,6 +71,24 @@ export default function SpellingBeeApp() {
     setActiveTab("practice")
   }
 
+  const handleSessionStart = (session: TestSession) => {
+    setCurrentSession(session)
+    setActiveTab("test")
+  }
+
+  const handleSessionComplete = () => {
+    setCurrentSession(null)
+    setActiveTab("history")
+  }
+
+  const handleResumeSession = (session: TestSession) => {
+    setCurrentSession(session)
+    setActiveTab("test")
+  }
+
+  // If there's an active session and we're on the test tab, show the session practice
+  const showSessionPractice = currentSession && activeTab === "test"
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="max-w-6xl mx-auto">
@@ -78,6 +114,9 @@ export default function SpellingBeeApp() {
             <TabsTrigger value="test" className="flex items-center gap-2">
               <Trophy className="w-4 h-4" />
               Test Session
+              {currentSession && !currentSession.isCompleted && (
+                <span className="ml-1 w-2 h-2 bg-orange-500 rounded-full"></span>
+              )}
             </TabsTrigger>
             <TabsTrigger value="history" className="flex items-center gap-2">
               <History className="w-4 h-4" />
@@ -133,11 +172,21 @@ export default function SpellingBeeApp() {
           </TabsContent>
 
           <TabsContent value="test" className="space-y-6">
-            <TestSessionComponent words={words} wordListName={currentListName} wordListId={currentListId} apiKey={apiKey} />
+            {showSessionPractice ? (
+              <SessionPractice session={currentSession} apiKey={apiKey} onSessionComplete={handleSessionComplete} />
+            ) : (
+              <TestSessionComponent
+                words={words}
+                wordListName={currentListName}
+                wordListId={currentListId}
+                apiKey={apiKey}
+                onSessionStart={handleSessionStart}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="history" className="space-y-6">
-            <SessionHistory />
+            <SessionHistory onResumeSession={handleResumeSession} />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">

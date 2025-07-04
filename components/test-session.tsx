@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/dialog"
 import { Play, Settings, Trophy, Target, CheckCircle, Clock } from "lucide-react"
 import { sessionStorage, type TestSession } from "@/lib/session-storage"
-import { SessionPractice } from "@/components/session-practice"
 import { WordFilter } from "@/components/word-filter"
 
 interface TestSessionProps {
@@ -28,14 +27,14 @@ interface TestSessionProps {
   wordListName: string
   wordListId?: string
   apiKey: string
+  onSessionStart?: (session: TestSession) => void
 }
 
-export function TestSessionComponent({ words, wordListName, wordListId, apiKey }: TestSessionProps) {
+export function TestSessionComponent({ words, wordListName, wordListId, apiKey, onSessionStart }: TestSessionProps) {
   const [showStartDialog, setShowStartDialog] = useState(false)
   const [sessionName, setSessionName] = useState("")
   const [excludePreviouslyCorrect, setExcludePreviouslyCorrect] = useState(true)
   const [randomizeWords, setRandomizeWords] = useState(true) // toggle for shuffling
-  const [currentSession, setCurrentSession] = useState<TestSession | null>(null)
   const [availableWords, setAvailableWords] = useState<string[]>([])
   const [masteredWords, setMasteredWords] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
@@ -107,21 +106,15 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
       )
 
       const session = await sessionStorage.getSession(sessionId)
-      setCurrentSession(session)
+      if (session && onSessionStart) {
+        onSessionStart(session)
+      }
       setShowStartDialog(false)
       setSessionName("")
     } catch (err) {
       setError("Failed to start session")
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleSessionComplete = async () => {
-    if (currentSession) {
-      await sessionStorage.completeSession(currentSession.id)
-      setCurrentSession(null)
-      await loadMasteredWords() // refresh mastered cache
     }
   }
 
@@ -139,10 +132,6 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
   /* ------------------------------------------------------------------ */
   /* Render                                                             */
   /* ------------------------------------------------------------------ */
-
-  if (currentSession) {
-    return <SessionPractice session={currentSession} apiKey={apiKey} onSessionComplete={handleSessionComplete} />
-  }
 
   if (words.length === 0) {
     return (
