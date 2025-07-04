@@ -11,9 +11,10 @@ import { WordFilter } from "@/components/word-filter"
 import { TestSessionComponent } from "@/components/test-session"
 import { SessionHistory } from "@/components/session-history"
 import { SessionPractice } from "@/components/session-practice"
-import { BookOpen, Settings, Play, Archive, Trophy, History } from "lucide-react"
+import { BookOpen, Settings, Play, Archive, Trophy, History, ChevronDown } from "lucide-react"
 import { sessionStorage, type TestSession } from "@/lib/session-storage"
 import { wordListStorage, type SavedWordList } from "@/lib/word-list-storage"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
 export default function SpellingBeeApp() {
   const [words, setWords] = useState<string[]>([])
@@ -24,6 +25,8 @@ export default function SpellingBeeApp() {
   const [currentListId, setCurrentListId] = useState<string>("")
   const [currentSession, setCurrentSession] = useState<TestSession | null>(null)
   const [savedLists, setSavedLists] = useState<SavedWordList[]>([])
+  const [isUploadOpen, setIsUploadOpen] = useState(true)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(true)
 
   const loadSavedLists = useCallback(async () => {
     try {
@@ -137,15 +140,26 @@ export default function SpellingBeeApp() {
           </TabsList>
 
           <TabsContent value="upload" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Upload Word List</CardTitle>
-                <CardDescription>Upload a text file with words (one word per line) to start practicing</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <WordListUpload onWordsUploaded={handleWordsUploaded} onListSaved={loadSavedLists} />
-              </CardContent>
-            </Card>
+            <Collapsible open={isUploadOpen} onOpenChange={setIsUploadOpen} asChild>
+              <Card>
+                <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between p-6 text-left">
+                  <div>
+                    <CardTitle>Upload Word List</CardTitle>
+                    <CardDescription>
+                      Upload a text file with words (one word per line) to start practicing
+                    </CardDescription>
+                  </div>
+                  <ChevronDown
+                    className={`h-5 w-5 shrink-0 transition-transform duration-300 ${isUploadOpen ? "rotate-180" : ""}`}
+                  />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="pt-0">
+                    <WordListUpload onWordsUploaded={handleWordsUploaded} onListSaved={loadSavedLists} />
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
           </TabsContent>
 
           <TabsContent value="saved" className="space-y-6">
@@ -202,15 +216,26 @@ export default function SpellingBeeApp() {
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>API Configuration</CardTitle>
-                <CardDescription>Configure your Merriam-Webster Dictionary API key</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ApiKeyManager currentApiKey={apiKey} onApiKeySaved={handleApiKeySaved} />
-              </CardContent>
-            </Card>
+            <Collapsible open={isSettingsOpen} onOpenChange={setIsSettingsOpen} asChild>
+              <Card>
+                <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between p-6 text-left">
+                  <div>
+                    <CardTitle>API Configuration</CardTitle>
+                    <CardDescription>Configure your Merriam-Webster Dictionary API key</CardDescription>
+                  </div>
+                  <ChevronDown
+                    className={`h-5 w-5 shrink-0 transition-transform duration-300 ${
+                      isSettingsOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="pt-0">
+                    <ApiKeyManager currentApiKey={apiKey} onApiKeySaved={handleApiKeySaved} />
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
           </TabsContent>
         </Tabs>
       </div>

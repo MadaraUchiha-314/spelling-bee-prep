@@ -22,7 +22,9 @@ import {
   ThumbsUp,
   ThumbsDown,
   Headphones,
+  ChevronDown,
 } from "lucide-react"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
 interface WordData {
   word: string
@@ -58,8 +60,8 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
   const [incorrectCount, setIncorrectCount] = useState(0)
   const [randomizeWords, setRandomizeWords] = useState(false)
   const [shuffledWords, setShuffledWords] = useState<string[]>([])
+  const [isPracticeOpen, setIsPracticeOpen] = useState(true)
 
-  // Set current word when index changes
   useEffect(() => {
     if (words.length > 0 && currentWordIndex < words.length) {
       setCurrentWord(words[currentWordIndex])
@@ -67,7 +69,6 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
     }
   }, [currentWordIndex, words])
 
-  // Handle word randomization
   useEffect(() => {
     if (randomizeWords) {
       const shuffled = [...words].sort(() => Math.random() - 0.5)
@@ -75,10 +76,9 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
     } else {
       setShuffledWords(words)
     }
-    setCurrentWordIndex(0) // Reset to first word when toggling
+    setCurrentWordIndex(0)
   }, [words, randomizeWords])
 
-  // Update current word to use shuffled words
   useEffect(() => {
     const wordsToUse = shuffledWords.length > 0 ? shuffledWords : words
     if (wordsToUse.length > 0 && currentWordIndex < wordsToUse.length) {
@@ -168,13 +168,10 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
       setFeedback("Correct! Well done!")
     } else {
       setIncorrectCount((prev) => prev + 1)
-      // Provide detailed feedback
       const userWord = userSpelling.toLowerCase().trim()
       const correctWord = currentWord.toLowerCase()
 
       let feedbackText = `Incorrect. The correct spelling is "${currentWord}". `
-
-      // Find differences
       const differences = []
       const maxLength = Math.max(userWord.length, correctWord.length)
 
@@ -210,7 +207,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
     setCorrectCount((prev) => prev + 1)
     setFeedback("Marked as correct!")
     if (!userSpelling.trim()) {
-      setUserSpelling(currentWord) // Fill in the correct spelling if empty
+      setUserSpelling(currentWord)
     }
   }
 
@@ -222,23 +219,22 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
   }
 
   const nextWord = () => {
-    clearFeedback() // Clear feedback before moving to next word
+    clearFeedback()
     const wordsToUse = shuffledWords.length > 0 ? shuffledWords : words
     if (currentWordIndex < wordsToUse.length - 1) {
       setCurrentWordIndex(currentWordIndex + 1)
     } else {
-      // Wrap around to beginning
       setCurrentWordIndex(0)
     }
   }
 
   const skipWord = () => {
-    clearFeedback() // Clear feedback when skipping
+    clearFeedback()
     nextWord()
   }
 
   const previousWord = () => {
-    clearFeedback() // Clear feedback when going back
+    clearFeedback()
     if (currentWordIndex > 0) {
       setCurrentWordIndex(currentWordIndex - 1)
     }
@@ -262,7 +258,6 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
 
   return (
     <div className="space-y-6">
-      {/* Practice Header */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -293,14 +288,19 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
         </CardHeader>
       </Card>
 
-      {/* Word Practice */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>
-              Current Word ({currentWordIndex + 1} of {shuffledWords.length > 0 ? shuffledWords.length : words.length})
-            </CardTitle>
-            <div className="flex items-center gap-2">
+      <Collapsible open={isPracticeOpen} onOpenChange={setIsPracticeOpen} asChild>
+        <Card>
+          <div className="flex items-center p-6">
+            <CollapsibleTrigger className="flex flex-1 cursor-pointer items-center justify-between text-left">
+              <CardTitle>
+                Current Word ({currentWordIndex + 1} of {shuffledWords.length > 0 ? shuffledWords.length : words.length}
+                )
+              </CardTitle>
+              <ChevronDown
+                className={`h-5 w-5 shrink-0 transition-transform duration-300 ${isPracticeOpen ? "rotate-180" : ""}`}
+              />
+            </CollapsibleTrigger>
+            <div className="flex items-center gap-2 ml-4">
               <Button
                 variant="outline"
                 size="sm"
@@ -335,232 +335,228 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
               </Button>
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Current Word Display */}
-          <div className="text-center">
-            {showWord ? (
-              <div className="text-4xl font-bold text-blue-600 mb-4">{currentWord}</div>
-            ) : (
-              <div className="text-2xl text-gray-400 mb-4">Word Hidden - Use the buttons below to get clues</div>
-            )}
-          </div>
+          <CollapsibleContent>
+            <CardContent className="pt-0 space-y-6">
+              <div className="text-center">
+                {showWord ? (
+                  <div className="text-4xl font-bold text-blue-600 mb-4">{currentWord}</div>
+                ) : (
+                  <div className="text-2xl text-gray-400 mb-4">Word Hidden - Use the buttons below to get clues</div>
+                )}
+              </div>
 
-          {/* Action Buttons */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            <Button variant="outline" onClick={speakWord} className="flex items-center gap-2 bg-transparent">
-              <Volume2 className="w-4 h-4" />
-              Pronounce
-            </Button>
-
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (!wordData) fetchWordData(currentWord)
-                setShowPronunciation(!showPronunciation)
-              }}
-              disabled={loading}
-              className="flex items-center gap-2"
-            >
-              <Headphones className="w-4 h-4" />
-              Phonetic
-            </Button>
-
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (!wordData) fetchWordData(currentWord)
-                setShowDefinition(!showDefinition)
-              }}
-              disabled={loading}
-              className="flex items-center gap-2"
-            >
-              <BookOpen className="w-4 h-4" />
-              Definition
-            </Button>
-
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (!wordData) fetchWordData(currentWord)
-                setShowEtymology(!showEtymology)
-              }}
-              disabled={loading}
-              className="flex items-center gap-2"
-            >
-              <FileText className="w-4 h-4" />
-              Etymology
-            </Button>
-
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (!wordData) fetchWordData(currentWord)
-                setShowPartOfSpeech(!showPartOfSpeech)
-              }}
-              disabled={loading}
-              className="flex items-center gap-2"
-            >
-              <MessageSquare className="w-4 h-4" />
-              Part of Speech
-            </Button>
-
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (!wordData) fetchWordData(currentWord)
-                setShowExample(!showExample)
-              }}
-              disabled={loading}
-              className="flex items-center gap-2"
-            >
-              <MessageSquare className="w-4 h-4" />
-              Usage Example
-            </Button>
-          </div>
-
-          {/* Word Information Display */}
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          {loading && <div className="text-center text-gray-500">Loading word information...</div>}
-
-          {wordData && (
-            <div className="space-y-4">
-              {showPronunciation && wordData.pronunciation && (
-                <div className="p-4 bg-indigo-50 rounded-lg">
-                  <h4 className="font-semibold text-indigo-800 mb-2">Phonetic Spelling:</h4>
-                  <p className="text-indigo-700 font-mono text-lg">/{wordData.pronunciation}/</p>
-                </div>
-              )}
-
-              {showDefinition && wordData.definition && (
-                <div className="p-4 bg-blue-50 rounded-lg">
-                  <h4 className="font-semibold text-blue-800 mb-2">Definition:</h4>
-                  <p className="text-blue-700">{wordData.definition}</p>
-                </div>
-              )}
-
-              {showPartOfSpeech && wordData.partOfSpeech && (
-                <div className="p-4 bg-green-50 rounded-lg">
-                  <h4 className="font-semibold text-green-800 mb-2">Part of Speech:</h4>
-                  <Badge variant="secondary">{wordData.partOfSpeech}</Badge>
-                </div>
-              )}
-
-              {showEtymology && wordData.etymology && (
-                <div className="p-4 bg-purple-50 rounded-lg">
-                  <h4 className="font-semibold text-purple-800 mb-2">Etymology:</h4>
-                  <p className="text-purple-700 text-sm">{wordData.etymology}</p>
-                </div>
-              )}
-
-              {showExample && wordData.example && (
-                <div className="p-4 bg-orange-50 rounded-lg">
-                  <h4 className="font-semibold text-orange-800 mb-2">Usage Example:</h4>
-                  <p className="text-orange-700 italic">
-                    {wordData.example.replace(/\{wi\}/g, "").replace(/\{\/wi\}/g, "")}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          <Separator />
-
-          {/* Spelling Input */}
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="spelling-input" className="block text-sm font-medium mb-2">
-                Enter your spelling:
-              </label>
-              <div className="flex gap-2">
-                <Input
-                  id="spelling-input"
-                  value={userSpelling}
-                  onChange={(e) => setUserSpelling(e.target.value)}
-                  placeholder="Type the word here..."
-                  onKeyPress={(e) => e.key === "Enter" && !hasCheckedSpelling && checkSpelling()}
-                  className="flex-1"
-                  disabled={hasCheckedSpelling}
-                />
-                <Button onClick={checkSpelling} disabled={!userSpelling.trim() || hasCheckedSpelling}>
-                  Check
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <Button variant="outline" onClick={speakWord} className="flex items-center gap-2 bg-transparent">
+                  <Volume2 className="w-4 h-4" />
+                  Pronounce
                 </Button>
+
                 <Button
-                  onClick={markAsCorrect}
-                  disabled={hasCheckedSpelling}
                   variant="outline"
-                  className="flex items-center gap-2 text-green-600 hover:text-green-700 hover:bg-green-50 bg-transparent"
+                  onClick={() => {
+                    if (!wordData) fetchWordData(currentWord)
+                    setShowPronunciation(!showPronunciation)
+                  }}
+                  disabled={loading}
+                  className="flex items-center gap-2"
                 >
-                  <ThumbsUp className="w-4 h-4" />
-                  Correct
+                  <Headphones className="w-4 h-4" />
+                  Phonetic
                 </Button>
+
                 <Button
-                  onClick={markAsIncorrect}
-                  disabled={hasCheckedSpelling}
                   variant="outline"
-                  className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 bg-transparent"
+                  onClick={() => {
+                    if (!wordData) fetchWordData(currentWord)
+                    setShowDefinition(!showDefinition)
+                  }}
+                  disabled={loading}
+                  className="flex items-center gap-2"
                 >
-                  <ThumbsDown className="w-4 h-4" />
-                  Wrong
+                  <BookOpen className="w-4 h-4" />
+                  Definition
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (!wordData) fetchWordData(currentWord)
+                    setShowEtymology(!showEtymology)
+                  }}
+                  disabled={loading}
+                  className="flex items-center gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  Etymology
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (!wordData) fetchWordData(currentWord)
+                    setShowPartOfSpeech(!showPartOfSpeech)
+                  }}
+                  disabled={loading}
+                  className="flex items-center gap-2"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Part of Speech
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (!wordData) fetchWordData(currentWord)
+                    setShowExample(!showExample)
+                  }}
+                  disabled={loading}
+                  className="flex items-center gap-2"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Usage Example
                 </Button>
               </div>
-            </div>
 
-            {/* Feedback */}
-            {feedback && (
-              <Alert
-                variant={isCorrect ? "default" : "destructive"}
-                className={isCorrect ? "border-green-200 bg-green-50" : ""}
-              >
-                <div className="flex items-center gap-2">
-                  {isCorrect ? (
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                  ) : (
-                    <XCircle className="w-4 h-4 text-red-600" />
-                  )}
-                  <AlertDescription className={isCorrect ? "text-green-800" : ""}>{feedback}</AlertDescription>
-                </div>
-              </Alert>
-            )}
-
-            {/* Next Word Button - Show after checking spelling OR always show a navigation option */}
-            <div className="flex justify-center gap-4 pt-4">
-              <Button
-                variant="outline"
-                onClick={previousWord}
-                disabled={currentWordIndex === 0}
-                className="flex items-center gap-2 bg-transparent"
-                size="lg"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Previous
-              </Button>
-
-              {hasCheckedSpelling ? (
-                <Button onClick={nextWord} className="flex items-center gap-2" size="lg">
-                  <RotateCcw className="w-4 h-4" />
-                  Next Word
-                </Button>
-              ) : (
-                <Button
-                  onClick={skipWord}
-                  variant="outline"
-                  className="flex items-center gap-2 bg-transparent"
-                  size="lg"
-                >
-                  <ArrowRight className="w-4 h-4" />
-                  Next Word
-                </Button>
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
               )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+
+              {loading && <div className="text-center text-gray-500">Loading word information...</div>}
+
+              {wordData && (
+                <div className="space-y-4">
+                  {showPronunciation && wordData.pronunciation && (
+                    <div className="p-4 bg-indigo-50 rounded-lg">
+                      <h4 className="font-semibold text-indigo-800 mb-2">Phonetic Spelling:</h4>
+                      <p className="text-indigo-700 font-mono text-lg">/{wordData.pronunciation}/</p>
+                    </div>
+                  )}
+
+                  {showDefinition && wordData.definition && (
+                    <div className="p-4 bg-blue-50 rounded-lg">
+                      <h4 className="font-semibold text-blue-800 mb-2">Definition:</h4>
+                      <p className="text-blue-700">{wordData.definition}</p>
+                    </div>
+                  )}
+
+                  {showPartOfSpeech && wordData.partOfSpeech && (
+                    <div className="p-4 bg-green-50 rounded-lg">
+                      <h4 className="font-semibold text-green-800 mb-2">Part of Speech:</h4>
+                      <Badge variant="secondary">{wordData.partOfSpeech}</Badge>
+                    </div>
+                  )}
+
+                  {showEtymology && wordData.etymology && (
+                    <div className="p-4 bg-purple-50 rounded-lg">
+                      <h4 className="font-semibold text-purple-800 mb-2">Etymology:</h4>
+                      <p className="text-purple-700 text-sm">{wordData.etymology}</p>
+                    </div>
+                  )}
+
+                  {showExample && wordData.example && (
+                    <div className="p-4 bg-orange-50 rounded-lg">
+                      <h4 className="font-semibold text-orange-800 mb-2">Usage Example:</h4>
+                      <p className="text-orange-700 italic">
+                        {wordData.example.replace(/\{wi\}/g, "").replace(/\{\/wi\}/g, "")}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <Separator />
+
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="spelling-input" className="block text-sm font-medium mb-2">
+                    Enter your spelling:
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="spelling-input"
+                      value={userSpelling}
+                      onChange={(e) => setUserSpelling(e.target.value)}
+                      placeholder="Type the word here..."
+                      onKeyPress={(e) => e.key === "Enter" && !hasCheckedSpelling && checkSpelling()}
+                      className="flex-1"
+                      disabled={hasCheckedSpelling}
+                    />
+                    <Button onClick={checkSpelling} disabled={!userSpelling.trim() || hasCheckedSpelling}>
+                      Check
+                    </Button>
+                    <Button
+                      onClick={markAsCorrect}
+                      disabled={hasCheckedSpelling}
+                      variant="outline"
+                      className="flex items-center gap-2 text-green-600 hover:text-green-700 hover:bg-green-50 bg-transparent"
+                    >
+                      <ThumbsUp className="w-4 h-4" />
+                      Correct
+                    </Button>
+                    <Button
+                      onClick={markAsIncorrect}
+                      disabled={hasCheckedSpelling}
+                      variant="outline"
+                      className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 bg-transparent"
+                    >
+                      <ThumbsDown className="w-4 h-4" />
+                      Wrong
+                    </Button>
+                  </div>
+                </div>
+
+                {feedback && (
+                  <Alert
+                    variant={isCorrect ? "default" : "destructive"}
+                    className={isCorrect ? "border-green-200 bg-green-50" : ""}
+                  >
+                    <div className="flex items-center gap-2">
+                      {isCorrect ? (
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <XCircle className="w-4 h-4 text-red-600" />
+                      )}
+                      <AlertDescription className={isCorrect ? "text-green-800" : ""}>{feedback}</AlertDescription>
+                    </div>
+                  </Alert>
+                )}
+
+                <div className="flex justify-center gap-4 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={previousWord}
+                    disabled={currentWordIndex === 0}
+                    className="flex items-center gap-2 bg-transparent"
+                    size="lg"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Previous
+                  </Button>
+
+                  {hasCheckedSpelling ? (
+                    <Button onClick={nextWord} className="flex items-center gap-2" size="lg">
+                      <RotateCcw className="w-4 h-4" />
+                      Next Word
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={skipWord}
+                      variant="outline"
+                      className="flex items-center gap-2 bg-transparent"
+                      size="lg"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                      Next Word
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
     </div>
   )
 }

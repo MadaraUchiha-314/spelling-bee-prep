@@ -1,10 +1,9 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -18,9 +17,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Play, Settings, Trophy, Target, CheckCircle, Clock } from "lucide-react"
+import { Play, Settings, Trophy, Target, CheckCircle, Clock, ChevronDown } from "lucide-react"
 import { sessionStorage, type TestSession } from "@/lib/session-storage"
 import { WordFilter } from "@/components/word-filter"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
 interface TestSessionProps {
   words: string[]
@@ -34,27 +34,22 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey, 
   const [showStartDialog, setShowStartDialog] = useState(false)
   const [sessionName, setSessionName] = useState("")
   const [excludePreviouslyCorrect, setExcludePreviouslyCorrect] = useState(true)
-  const [randomizeWords, setRandomizeWords] = useState(true) // toggle for shuffling
+  const [randomizeWords, setRandomizeWords] = useState(true)
   const [availableWords, setAvailableWords] = useState<string[]>([])
   const [masteredWords, setMasteredWords] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [filteredWords, setFilteredWords] = useState<string[]>([])
-
-  /* ------------------------------------------------------------------ */
-  /* Helpers                                                            */
-  /* ------------------------------------------------------------------ */
+  const [isOpen, setIsOpen] = useState(true)
 
   useEffect(() => {
     loadMasteredWords()
   }, [])
 
-  // whenever filters, mastered list, or toggle change -> recompute available
   useEffect(() => {
     updateAvailableWords()
   }, [filteredWords, masteredWords, excludePreviouslyCorrect])
 
-  // keep local filteredWords in sync with the incoming words
   useEffect(() => {
     setFilteredWords(words)
   }, [words])
@@ -68,12 +63,10 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey, 
     }
   }
 
-  /** callback from WordFilter */
   const handleWordsFiltered = (filtered: string[]) => {
     setFilteredWords(filtered)
   }
 
-  /** decide what words are available after "exclude mastered" toggle */
   const updateAvailableWords = () => {
     const wordsToFilter = filteredWords.length > 0 ? filteredWords : words
     if (excludePreviouslyCorrect && masteredWords.length > 0) {
@@ -84,10 +77,8 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey, 
     }
   }
 
-  /** shuffle helper */
   const shuffle = (arr: string[]) => [...arr].sort(() => Math.random() - 0.5)
 
-  /** create & start session */
   const startSession = async () => {
     if (!sessionName.trim() || availableWords.length === 0) return
 
@@ -129,10 +120,6 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey, 
     setSessionName(`${wordListName} - ${dateStr}`)
   }
 
-  /* ------------------------------------------------------------------ */
-  /* Render                                                             */
-  /* ------------------------------------------------------------------ */
-
   if (words.length === 0) {
     return (
       <Card>
@@ -149,89 +136,92 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey, 
 
   return (
     <div className="space-y-6">
-      {/* Heading card -------------------------------------------------- */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Trophy className="w-5 h-5" />
-            Test Session
-          </CardTitle>
-          <CardDescription>Start a structured spelling test to track your progress</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Word filter */}
-          <WordFilter words={words} onWordsFiltered={handleWordsFiltered} />
-
-          {/* quick stats ------------------------------------------------ */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard icon={Target} label="Filtered Words" value={filteredWords.length} color="blue" />
-            <StatCard icon={CheckCircle} label="Mastered" value={masteredWords.length} color="green" />
-            <StatCard icon={Clock} label="Available" value={availableWords.length} color="orange" />
-          </div>
-
-          {/* options ---------------------------------------------------- */}
-          <div className="p-4 border rounded-lg space-y-4">
-            <h3 className="font-medium flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              Session Options
-            </h3>
-
-            <ToggleRow
-              id="randomize-words"
-              checked={randomizeWords}
-              onChange={setRandomizeWords}
-              title="Randomize word order"
-              description="Shuffle the words for varied practice"
+      <Collapsible open={isOpen} onOpenChange={setIsOpen} asChild>
+        <Card>
+          <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between p-6 text-left">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="w-5 h-5" />
+                Test Session
+              </CardTitle>
+              <CardDescription>Start a structured spelling test to track your progress</CardDescription>
+            </div>
+            <ChevronDown
+              className={`h-5 w-5 shrink-0 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
             />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="pt-0 space-y-6">
+              <WordFilter words={words} onWordsFiltered={handleWordsFiltered} />
 
-            <ToggleRow
-              id="exclude-mastered"
-              checked={excludePreviouslyCorrect}
-              onChange={setExcludePreviouslyCorrect}
-              title="Exclude previously mastered words"
-              description="Skip words you've spelled correctly in previous sessions"
-            />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <StatCard icon={Target} label="Filtered Words" value={filteredWords.length} color="blue" />
+                <StatCard icon={CheckCircle} label="Mastered" value={masteredWords.length} color="green" />
+                <StatCard icon={Clock} label="Available" value={availableWords.length} color="orange" />
+              </div>
 
-            {excludePreviouslyCorrect && masteredWords.length > 0 && (
-              <Alert>
-                <AlertDescription>
-                  {masteredWords.length} mastered words will be excluded from this session.
-                  {availableWords.length === 0 && (
-                    <span className="text-orange-600 font-medium">
-                      {" "}
-                      All words have been mastered! Consider adding new words or disabling this option.
-                    </span>
-                  )}
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
+              <div className="p-4 border rounded-lg space-y-4">
+                <h3 className="font-medium flex items-center gap-2">
+                  <Settings className="w-4 h-4" />
+                  Session Options
+                </h3>
 
-          {/* start button ---------------------------------------------- */}
-          <div className="flex justify-center">
-            <Button
-              onClick={() => {
-                generateSessionName()
-                setShowStartDialog(true)
-              }}
-              disabled={availableWords.length === 0}
-              className="flex items-center gap-2"
-              size="lg"
-            >
-              <Play className="w-4 h-4" />
-              Start Test Session
-            </Button>
-          </div>
+                <ToggleRow
+                  id="randomize-words"
+                  checked={randomizeWords}
+                  onChange={setRandomizeWords}
+                  title="Randomize word order"
+                  description="Shuffle the words for varied practice"
+                />
 
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
+                <ToggleRow
+                  id="exclude-mastered"
+                  checked={excludePreviouslyCorrect}
+                  onChange={setExcludePreviouslyCorrect}
+                  title="Exclude previously mastered words"
+                  description="Skip words you've spelled correctly in previous sessions"
+                />
 
-      {/* dialog -------------------------------------------------------- */}
+                {excludePreviouslyCorrect && masteredWords.length > 0 && (
+                  <Alert>
+                    <AlertDescription>
+                      {masteredWords.length} mastered words will be excluded from this session.
+                      {availableWords.length === 0 && (
+                        <span className="text-orange-600 font-medium">
+                          {" "}
+                          All words have been mastered! Consider adding new words or disabling this option.
+                        </span>
+                      )}
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+
+              <div className="flex justify-center">
+                <Button
+                  onClick={() => {
+                    generateSessionName()
+                    setShowStartDialog(true)
+                  }}
+                  disabled={availableWords.length === 0}
+                  className="flex items-center gap-2"
+                  size="lg"
+                >
+                  <Play className="w-4 h-4" />
+                  Start Test Session
+                </Button>
+              </div>
+
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
       <Dialog open={showStartDialog} onOpenChange={setShowStartDialog}>
         <DialogContent>
           <DialogHeader>
@@ -284,10 +274,6 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey, 
     </div>
   )
 }
-
-/* -------------------------------------------------------------------- */
-/* tiny sub-components                                                  */
-/* -------------------------------------------------------------------- */
 
 interface StatCardProps {
   icon: React.ElementType
