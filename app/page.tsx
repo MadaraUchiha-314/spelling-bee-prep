@@ -98,6 +98,12 @@ export default function SpellingBeeApp() {
     setActiveTab("test")
   }
 
+  const handleSessionDeleted = (sessionId: string) => {
+    if (currentSession?.id === sessionId) {
+      setCurrentSession(null)
+    }
+  }
+
   const showSessionPractice = currentSession && activeTab === "test"
 
   return (
@@ -212,7 +218,7 @@ export default function SpellingBeeApp() {
           </TabsContent>
 
           <TabsContent value="history" className="space-y-6">
-            <SessionHistory onResumeSession={handleResumeSession} />
+            <SessionHistory onResumeSession={handleResumeSession} onSessionDeleted={handleSessionDeleted} />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">

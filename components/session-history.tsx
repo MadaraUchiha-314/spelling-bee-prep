@@ -37,9 +37,10 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 
 interface SessionHistoryProps {
   onResumeSession?: (session: TestSession) => void
+  onSessionDeleted?: (sessionId: string) => void
 }
 
-export function SessionHistory({ onResumeSession }: SessionHistoryProps) {
+export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHistoryProps) {
   const [sessions, setSessions] = useState<TestSession[]>([])
   const [stats, setStats] = useState<SessionStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -72,11 +73,16 @@ export function SessionHistory({ onResumeSession }: SessionHistoryProps) {
   const handleDeleteSession = async () => {
     if (!sessionToDelete) return
 
+    const sessionId = sessionToDelete.id
     try {
-      await sessionStorage.deleteSession(sessionToDelete.id)
-      setSessions((prev) => prev.filter((session) => session.id !== sessionToDelete.id))
+      await sessionStorage.deleteSession(sessionId)
+      setSessions((prev) => prev.filter((session) => session.id !== sessionId))
       const updatedStats = await sessionStorage.getStats()
       setStats(updatedStats)
+
+      if (onSessionDeleted) {
+        onSessionDeleted(sessionId)
+      }
     } catch (err) {
       setError("Failed to delete session")
     } finally {
