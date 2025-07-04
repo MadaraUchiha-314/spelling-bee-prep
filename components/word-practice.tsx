@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -61,6 +61,16 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
   const [randomizeWords, setRandomizeWords] = useState(false)
   const [shuffledWords, setShuffledWords] = useState<string[]>([])
   const [isPracticeOpen, setIsPracticeOpen] = useState(true)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    // Cleanup timeout on unmount
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (words.length > 0 && currentWordIndex < words.length) {
@@ -209,6 +219,8 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
     if (!userSpelling.trim()) {
       setUserSpelling(currentWord)
     }
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    timeoutRef.current = setTimeout(nextWord, 1200)
   }
 
   const markAsIncorrect = () => {
@@ -216,9 +228,15 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
     setHasCheckedSpelling(true)
     setIncorrectCount((prev) => prev + 1)
     setFeedback(`Marked as incorrect. The correct spelling is "${currentWord}".`)
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    timeoutRef.current = setTimeout(nextWord, 1500)
   }
 
   const nextWord = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
+    }
     clearFeedback()
     const wordsToUse = shuffledWords.length > 0 ? shuffledWords : words
     if (currentWordIndex < wordsToUse.length - 1) {

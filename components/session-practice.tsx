@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import {
   Volume2,
   BookOpen,
@@ -75,6 +75,16 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
 
   const [completionOpen, setCompletionOpen] = useState(false)
   const [isPracticeOpen, setIsPracticeOpen] = useState(true)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    // Cleanup timeout on unmount
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [])
 
   const resetWordState = () => {
     setUserSpelling("")
@@ -181,6 +191,8 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
       isCorrect: true,
       timestamp: new Date(),
     })
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    timeoutRef.current = setTimeout(nextWord, 1200)
   }
 
   const markIncorrect = async () => {
@@ -194,6 +206,8 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
       isCorrect: false,
       timestamp: new Date(),
     })
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    timeoutRef.current = setTimeout(nextWord, 1500)
   }
 
   const previousWord = () => {
@@ -201,6 +215,10 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
   }
 
   const nextWord = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
+    }
     if (currentWordIndex < currentSession.wordsAsked.length - 1) {
       setCurrentWordIndex((i) => i + 1)
     } else {
