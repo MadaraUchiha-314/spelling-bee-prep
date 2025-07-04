@@ -15,7 +15,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -49,6 +48,7 @@ export function SessionHistory({ onResumeSession }: SessionHistoryProps) {
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
   const [isStatsOpen, setIsStatsOpen] = useState(true)
   const [isHistoryOpen, setIsHistoryOpen] = useState(true)
+  const [sessionToDelete, setSessionToDelete] = useState<TestSession | null>(null)
 
   useEffect(() => {
     loadData()
@@ -59,7 +59,7 @@ export function SessionHistory({ onResumeSession }: SessionHistoryProps) {
       setLoading(true)
       setError("")
       const [sessionsData, statsData] = await Promise.all([sessionStorage.getAllSessions(), sessionStorage.getStats()])
-      setSessions(sessionsData)
+      setSessions(sessionsData.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()))
       setStats(statsData)
     } catch (err) {
       setError("Failed to load session history")
@@ -69,15 +69,18 @@ export function SessionHistory({ onResumeSession }: SessionHistoryProps) {
     }
   }
 
-  const handleDeleteSession = async (sessionId: string) => {
+  const handleDeleteSession = async () => {
+    if (!sessionToDelete) return
+
     try {
-      await sessionStorage.deleteSession(sessionId)
-      setSessions((prev) => prev.filter((session) => session.id !== sessionId))
-      // Reload stats after deletion
+      await sessionStorage.deleteSession(sessionToDelete.id)
+      setSessions((prev) => prev.filter((session) => session.id !== sessionToDelete.id))
       const updatedStats = await sessionStorage.getStats()
       setStats(updatedStats)
     } catch (err) {
       setError("Failed to delete session")
+    } finally {
+      setSessionToDelete(null) // Close the dialog
     }
   }
 
@@ -256,7 +259,7 @@ export function SessionHistory({ onResumeSession }: SessionHistoryProps) {
                             </Badge>
                           )}
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-500 mb-2">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 mb-2">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             {formatDate(session.startTime)}
@@ -313,34 +316,14 @@ export function SessionHistory({ onResumeSession }: SessionHistoryProps) {
                           Details
                         </Button>
 
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex items-center gap-1 text-red-600 hover:text-red-700 bg-transparent"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Session</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete "{session.name}"? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDeleteSession(session.id)}
-                                className="bg-red-600 hover:bg-red-700"
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-1 text-red-600 hover:text-red-700 bg-transparent"
+                          onClick={() => setSessionToDelete(session)}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -436,6 +419,24 @@ export function SessionHistory({ onResumeSession }: SessionHistoryProps) {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Single Delete Confirmation Dialog */}
+      <AlertDialog open={!!sessionToDelete} onOpenChange={(isOpen) => !isOpen && setSessionToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Session</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{sessionToDelete?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteSession} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
