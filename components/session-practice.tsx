@@ -56,7 +56,7 @@ interface SessionPracticeProps {
 
 export function SessionPractice({ session, apiKey, onSessionComplete }: SessionPracticeProps) {
   const [currentSession, setCurrentSession] = useState<TestSession>(session)
-  const [currentWordIndex, setCurrentWordIndex] = useState(0)
+  const [currentWordIndex, setCurrentWordIndex] = useState(session.attempts.length)
   const [currentWord, setCurrentWord] = useState("")
   const [userSpelling, setUserSpelling] = useState("")
   const [hasCheckedSpelling, setHasCheckedSpelling] = useState(false)
