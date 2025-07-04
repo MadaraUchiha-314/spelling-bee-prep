@@ -20,28 +20,26 @@ export function WordFilter({ words, onWordsFiltered }: WordFilterProps) {
   // Update filtered words when words prop changes
   useEffect(() => {
     setFilteredWords(words)
-    if (onWordsFiltered) {
-      onWordsFiltered(words)
-    }
-  }, [words, onWordsFiltered])
+  }, [words])
 
   // Filter words when selected letters change
   useEffect(() => {
     if (selectedLetters.length === 0) {
       setFilteredWords(words)
-      if (onWordsFiltered) {
-        onWordsFiltered(words)
-      }
     } else {
       const filtered = words.filter((word) =>
         selectedLetters.some((letter) => word.toLowerCase().startsWith(letter.toLowerCase())),
       )
       setFilteredWords(filtered)
-      if (onWordsFiltered) {
-        onWordsFiltered(filtered)
-      }
     }
-  }, [selectedLetters, words, onWordsFiltered])
+  }, [selectedLetters, words])
+
+  // 3️⃣ inform parent whenever the result list changes
+  useEffect(() => {
+    if (onWordsFiltered) {
+      onWordsFiltered(filteredWords)
+    }
+  }, [filteredWords, onWordsFiltered])
 
   const toggleLetter = (letter: string) => {
     setSelectedLetters((prev) => (prev.includes(letter) ? prev.filter((l) => l !== letter) : [...prev, letter]))

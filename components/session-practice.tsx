@@ -75,7 +75,9 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
 
   const [completionOpen, setCompletionOpen] = useState(false)
   const [isPracticeOpen, setIsPracticeOpen] = useState(true)
+  const [isAdvancing, setIsAdvancing] = useState(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const lastWordRef = useRef<string>("")
 
   useEffect(() => {
     // Cleanup timeout on unmount
@@ -92,6 +94,7 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
     setIsCorrect(null)
     setFeedback("")
     setError("")
+    setIsAdvancing(false)
 
     setWordData(null)
     setShowDefinition(false)
@@ -103,10 +106,13 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
   }
 
   useEffect(() => {
-    if (currentSession.wordsAsked.length > 0 && currentWordIndex < currentSession.wordsAsked.length) {
-      setCurrentWord(currentSession.wordsAsked[currentWordIndex])
+    const newWord = currentSession.wordsAsked[currentWordIndex] ?? ""
+    if (newWord && newWord !== lastWordRef.current) {
+      setCurrentWord(newWord)
+      lastWordRef.current = newWord
       resetWordState()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentWordIndex, currentSession.wordsAsked])
 
   const fetchWordData = async (word: string) => {
@@ -179,7 +185,21 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
     }
   }
 
+  const nextWord = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
+    }
+    if (currentWordIndex < currentSession.wordsAsked.length - 1) {
+      setCurrentWordIndex((i) => i + 1)
+    } else {
+      setCompletionOpen(true)
+    }
+  }
+
   const markCorrect = async () => {
+    if (isAdvancing) return
+    setIsAdvancing(true)
     setIsCorrect(true)
     setHasCheckedSpelling(true)
     setFeedback("Marked as correct!")
@@ -196,6 +216,8 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
   }
 
   const markIncorrect = async () => {
+    if (isAdvancing) return
+    setIsAdvancing(true)
     setIsCorrect(false)
     setHasCheckedSpelling(true)
     setFeedback(`Marked as incorrect. The correct spelling is "${currentWord}".`)
@@ -212,18 +234,6 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
 
   const previousWord = () => {
     if (currentWordIndex > 0) setCurrentWordIndex((i) => i - 1)
-  }
-
-  const nextWord = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current)
-      timeoutRef.current = null
-    }
-    if (currentWordIndex < currentSession.wordsAsked.length - 1) {
-      setCurrentWordIndex((i) => i + 1)
-    } else {
-      setCompletionOpen(true)
-    }
   }
 
   const completeSession = async () => {
@@ -463,7 +473,7 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
                     <Button
                       variant="outline"
                       className="text-green-600 hover:text-green-700 bg-transparent gap-2"
-                      disabled={hasCheckedSpelling}
+                      disabled={hasCheckedSpelling || isAdvancing}
                       onClick={markCorrect}
                     >
                       <ThumbsUp className="w-4 h-4" />
@@ -473,7 +483,7 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
                     <Button
                       variant="outline"
                       className="text-red-600 hover:text-red-700 bg-transparent gap-2"
-                      disabled={hasCheckedSpelling}
+                      disabled={hasCheckedSpelling || isAdvancing}
                       onClick={markIncorrect}
                     >
                       <ThumbsDown className="w-4 h-4" />
@@ -498,7 +508,7 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
                   </Alert>
                 )}
 
-                {hasCheckedSpelling && (
+                {hasCheckedSpelling && !isAdvancing && (
                   <div className="flex justify-center pt-4">
                     <Button onClick={nextWord} size="lg" className="gap-2">
                       <RotateCcw className="w-4 h-4" />
