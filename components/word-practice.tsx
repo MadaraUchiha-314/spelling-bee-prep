@@ -329,14 +329,9 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
                 {showWord ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 {showWord ? "Hide" : "Show"} Word
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={skipWord}
-                className="flex items-center gap-2 text-orange-600 hover:text-orange-700 bg-transparent"
-              >
+              <Button variant="outline" size="sm" onClick={skipWord} className="flex items-center gap-2 bg-transparent">
                 <ArrowRight className="w-4 h-4" />
-                Skip
+                Next Word
               </Button>
             </div>
           </div>
@@ -559,7 +554,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
                   size="lg"
                 >
                   <ArrowRight className="w-4 h-4" />
-                  Skip Word
+                  Next Word
                 </Button>
               )}
             </div>

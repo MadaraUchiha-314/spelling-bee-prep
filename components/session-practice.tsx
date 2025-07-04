@@ -311,14 +311,9 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
                 )}
               </Button>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={nextWord}
-                className="text-orange-600 hover:text-orange-700 bg-transparent"
-              >
+              <Button variant="outline" size="sm" onClick={nextWord} className="bg-transparent">
                 <ArrowRight className="w-4 h-4" />
-                {isLastWord ? "Skip / Finish" : "Skip"}
+                {isLastWord ? "Finish Session" : "Next Word"}
               </Button>
             </div>
           </div>
