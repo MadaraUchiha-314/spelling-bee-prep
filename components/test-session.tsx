@@ -19,6 +19,7 @@ import {
 import { Play, Settings, Trophy, Target, CheckCircle, Clock } from "lucide-react"
 import { sessionStorage, type TestSession } from "@/lib/session-storage"
 import { SessionPractice } from "@/components/session-practice"
+import { WordFilter } from "@/components/word-filter"
 
 interface TestSessionProps {
   words: string[]
@@ -36,6 +37,7 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
   const [masteredWords, setMasteredWords] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [filteredWords, setFilteredWords] = useState<string[]>([])
 
   useEffect(() => {
     loadMasteredWords()
@@ -43,7 +45,11 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
 
   useEffect(() => {
     updateAvailableWords()
-  }, [words, masteredWords, excludePreviouslyCorrect])
+  }, [filteredWords, masteredWords, excludePreviouslyCorrect])
+
+  useEffect(() => {
+    setFilteredWords(words)
+  }, [words])
 
   const loadMasteredWords = async () => {
     try {
@@ -54,12 +60,17 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
     }
   }
 
+  const handleWordsFiltered = (filtered: string[]) => {
+    setFilteredWords(filtered)
+  }
+
   const updateAvailableWords = () => {
+    const wordsToFilter = filteredWords.length > 0 ? filteredWords : words
     if (excludePreviouslyCorrect && masteredWords.length > 0) {
-      const filtered = words.filter((word) => !masteredWords.includes(word.toLowerCase()))
+      const filtered = wordsToFilter.filter((word) => !masteredWords.includes(word.toLowerCase()))
       setAvailableWords(filtered)
     } else {
-      setAvailableWords(words)
+      setAvailableWords(wordsToFilter)
     }
   }
 
@@ -140,14 +151,17 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
           <CardDescription>Start a structured spelling test to track your progress</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Word Filter */}
+          {words.length > 0 && <WordFilter words={words} onWordsFiltered={handleWordsFiltered} />}
+
           {/* Session Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-4 bg-blue-50 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <Target className="w-4 h-4 text-blue-600" />
-                <span className="text-sm font-medium text-blue-800">Total Words</span>
+                <span className="text-sm font-medium text-blue-800">Filtered Words</span>
               </div>
-              <p className="text-2xl font-bold text-blue-600">{words.length}</p>
+              <p className="text-2xl font-bold text-blue-600">{filteredWords.length}</p>
             </div>
 
             <div className="p-4 bg-green-50 rounded-lg">
