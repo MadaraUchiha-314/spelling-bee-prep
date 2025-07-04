@@ -19,6 +19,8 @@ import {
   EyeOff,
   ArrowRight,
   ArrowLeft,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react"
 
 interface WordData {
@@ -197,6 +199,23 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
 
       setFeedback(feedbackText)
     }
+  }
+
+  const markAsCorrect = () => {
+    setIsCorrect(true)
+    setHasCheckedSpelling(true)
+    setCorrectCount((prev) => prev + 1)
+    setFeedback("Marked as correct!")
+    if (!userSpelling.trim()) {
+      setUserSpelling(currentWord) // Fill in the correct spelling if empty
+    }
+  }
+
+  const markAsIncorrect = () => {
+    setIsCorrect(false)
+    setHasCheckedSpelling(true)
+    setIncorrectCount((prev) => prev + 1)
+    setFeedback(`Marked as incorrect. The correct spelling is "${currentWord}".`)
   }
 
   const nextWord = () => {
@@ -452,6 +471,24 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
                 />
                 <Button onClick={checkSpelling} disabled={!userSpelling.trim() || hasCheckedSpelling}>
                   Check
+                </Button>
+                <Button
+                  onClick={markAsCorrect}
+                  disabled={hasCheckedSpelling}
+                  variant="outline"
+                  className="flex items-center gap-2 text-green-600 hover:text-green-700 hover:bg-green-50 bg-transparent"
+                >
+                  <ThumbsUp className="w-4 h-4" />
+                  Correct
+                </Button>
+                <Button
+                  onClick={markAsIncorrect}
+                  disabled={hasCheckedSpelling}
+                  variant="outline"
+                  className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 bg-transparent"
+                >
+                  <ThumbsDown className="w-4 h-4" />
+                  Wrong
                 </Button>
               </div>
             </div>

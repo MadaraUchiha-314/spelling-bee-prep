@@ -29,6 +29,8 @@ import {
   EyeOff,
   ArrowRight,
   ArrowLeft,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react"
 import { sessionStorage, type TestSession, type WordAttempt } from "@/lib/session-storage"
 
@@ -141,16 +143,10 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
     }
   }
 
-  const checkSpelling = async () => {
-    if (!userSpelling.trim()) return
-
-    const correct = userSpelling.toLowerCase().trim() === currentWord.toLowerCase()
-    setIsCorrect(correct)
-    setHasCheckedSpelling(true)
-
+  const saveAttempt = async (correct: boolean, spelling: string) => {
     const attempt: WordAttempt = {
       word: currentWord,
-      userSpelling: userSpelling.trim(),
+      userSpelling: spelling,
       isCorrect: correct,
       timestamp: new Date(),
     }
@@ -165,8 +161,20 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
       }
     } catch (err) {
       setError("Failed to save attempt")
-      return
+      return false
     }
+    return true
+  }
+
+  const checkSpelling = async () => {
+    if (!userSpelling.trim()) return
+
+    const correct = userSpelling.toLowerCase().trim() === currentWord.toLowerCase()
+    setIsCorrect(correct)
+    setHasCheckedSpelling(true)
+
+    const success = await saveAttempt(correct, userSpelling.trim())
+    if (!success) return
 
     if (correct) {
       setFeedback("Correct! Well done!")
@@ -205,6 +213,28 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
 
       setFeedback(feedbackText)
     }
+  }
+
+  const markAsCorrect = async () => {
+    setIsCorrect(true)
+    setHasCheckedSpelling(true)
+    setFeedback("Marked as correct!")
+
+    const spelling = userSpelling.trim() || currentWord
+    if (!userSpelling.trim()) {
+      setUserSpelling(currentWord) // Fill in the correct spelling if empty
+    }
+
+    await saveAttempt(true, spelling)
+  }
+
+  const markAsIncorrect = async () => {
+    setIsCorrect(false)
+    setHasCheckedSpelling(true)
+    setFeedback(`Marked as incorrect. The correct spelling is "${currentWord}".`)
+
+    const spelling = userSpelling.trim() || "[marked as incorrect]"
+    await saveAttempt(false, spelling)
   }
 
   const nextWord = () => {
@@ -451,6 +481,24 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
                 />
                 <Button onClick={checkSpelling} disabled={!userSpelling.trim() || hasCheckedSpelling}>
                   Check
+                </Button>
+                <Button
+                  onClick={markAsCorrect}
+                  disabled={hasCheckedSpelling}
+                  variant="outline"
+                  className="flex items-center gap-2 text-green-600 hover:text-green-700 hover:bg-green-50 bg-transparent"
+                >
+                  <ThumbsUp className="w-4 h-4" />
+                  Correct
+                </Button>
+                <Button
+                  onClick={markAsIncorrect}
+                  disabled={hasCheckedSpelling}
+                  variant="outline"
+                  className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 bg-transparent"
+                >
+                  <ThumbsDown className="w-4 h-4" />
+                  Wrong
                 </Button>
               </div>
             </div>

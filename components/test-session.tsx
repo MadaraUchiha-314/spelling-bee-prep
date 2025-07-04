@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -32,7 +34,7 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
   const [showStartDialog, setShowStartDialog] = useState(false)
   const [sessionName, setSessionName] = useState("")
   const [excludePreviouslyCorrect, setExcludePreviouslyCorrect] = useState(true)
-  const [randomizeWords, setRandomizeWords] = useState(true) // Default to true for test sessions
+  const [randomizeWords, setRandomizeWords] = useState(true) // toggle for shuffling
   const [currentSession, setCurrentSession] = useState<TestSession | null>(null)
   const [availableWords, setAvailableWords] = useState<string[]>([])
   const [masteredWords, setMasteredWords] = useState<string[]>([])
@@ -40,14 +42,20 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
   const [error, setError] = useState("")
   const [filteredWords, setFilteredWords] = useState<string[]>([])
 
+  /* ------------------------------------------------------------------ */
+  /* Helpers                                                            */
+  /* ------------------------------------------------------------------ */
+
   useEffect(() => {
     loadMasteredWords()
   }, [])
 
+  // whenever filters, mastered list, or toggle change -> recompute available
   useEffect(() => {
     updateAvailableWords()
   }, [filteredWords, masteredWords, excludePreviouslyCorrect])
 
+  // keep local filteredWords in sync with the incoming words
   useEffect(() => {
     setFilteredWords(words)
   }, [words])
@@ -61,20 +69,26 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
     }
   }
 
+  /** callback from WordFilter */
   const handleWordsFiltered = (filtered: string[]) => {
     setFilteredWords(filtered)
   }
 
+  /** decide what words are available after “exclude mastered” toggle */
   const updateAvailableWords = () => {
     const wordsToFilter = filteredWords.length > 0 ? filteredWords : words
     if (excludePreviouslyCorrect && masteredWords.length > 0) {
-      const filtered = wordsToFilter.filter((word) => !masteredWords.includes(word.toLowerCase()))
+      const filtered = wordsToFilter.filter((w) => !masteredWords.includes(w.toLowerCase()))
       setAvailableWords(filtered)
     } else {
       setAvailableWords(wordsToFilter)
     }
   }
 
+  /** shuffle helper */
+  const shuffle = (arr: string[]) => [...arr].sort(() => Math.random() - 0.5)
+
+  /** create & start session */
   const startSession = async () => {
     if (!sessionName.trim() || availableWords.length === 0) return
 
@@ -82,8 +96,7 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
       setLoading(true)
       setError("")
 
-      // Shuffle words for the session if randomization is enabled
-      const wordsForSession = randomizeWords ? [...availableWords].sort(() => Math.random() - 0.5) : [...availableWords]
+      const wordsForSession = randomizeWords ? shuffle(availableWords) : [...availableWords]
 
       const sessionId = await sessionStorage.createSession(
         sessionName.trim(),
@@ -108,7 +121,7 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
     if (currentSession) {
       await sessionStorage.completeSession(currentSession.id)
       setCurrentSession(null)
-      await loadMasteredWords() // Refresh mastered words
+      await loadMasteredWords() // refresh mastered cache
     }
   }
 
@@ -122,6 +135,10 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
     })
     setSessionName(`${wordListName} - ${dateStr}`)
   }
+
+  /* ------------------------------------------------------------------ */
+  /* Render                                                             */
+  /* ------------------------------------------------------------------ */
 
   if (currentSession) {
     return <SessionPractice session={currentSession} apiKey={apiKey} onSessionComplete={handleSessionComplete} />
@@ -143,6 +160,7 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
 
   return (
     <div className="space-y-6">
+      {/* Heading card -------------------------------------------------- */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -152,62 +170,38 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
           <CardDescription>Start a structured spelling test to track your progress</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Word Filter */}
-          {words.length > 0 && <WordFilter words={words} onWordsFiltered={handleWordsFiltered} />}
+          {/* Word filter */}
+          <WordFilter words={words} onWordsFiltered={handleWordsFiltered} />
 
-          {/* Session Stats */}
+          {/* quick stats ------------------------------------------------ */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <Target className="w-4 h-4 text-blue-600" />
-                <span className="text-sm font-medium text-blue-800">Filtered Words</span>
-              </div>
-              <p className="text-2xl font-bold text-blue-600">{filteredWords.length}</p>
-            </div>
-
-            <div className="p-4 bg-green-50 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle className="w-4 h-4 text-green-600" />
-                <span className="text-sm font-medium text-green-800">Mastered</span>
-              </div>
-              <p className="text-2xl font-bold text-green-600">{masteredWords.length}</p>
-            </div>
-
-            <div className="p-4 bg-orange-50 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <Clock className="w-4 h-4 text-orange-600" />
-                <span className="text-sm font-medium text-orange-800">Available</span>
-              </div>
-              <p className="text-2xl font-bold text-orange-600">{availableWords.length}</p>
-            </div>
+            <StatCard icon={Target} label="Filtered Words" value={filteredWords.length} color="blue" />
+            <StatCard icon={CheckCircle} label="Mastered" value={masteredWords.length} color="green" />
+            <StatCard icon={Clock} label="Available" value={availableWords.length} color="orange" />
           </div>
 
-          {/* Session Options */}
+          {/* options ---------------------------------------------------- */}
           <div className="p-4 border rounded-lg space-y-4">
             <h3 className="font-medium flex items-center gap-2">
               <Settings className="w-4 h-4" />
               Session Options
             </h3>
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <Label htmlFor="randomize-words">Randomize word order</Label>
-                <p className="text-sm text-gray-500">Shuffle the words for varied practice</p>
-              </div>
-              <Switch id="randomize-words" checked={randomizeWords} onCheckedChange={setRandomizeWords} />
-            </div>
+            <ToggleRow
+              id="randomize-words"
+              checked={randomizeWords}
+              onChange={setRandomizeWords}
+              title="Randomize word order"
+              description="Shuffle the words for varied practice"
+            />
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <Label htmlFor="exclude-mastered">Exclude previously mastered words</Label>
-                <p className="text-sm text-gray-500">Skip words you've spelled correctly in previous sessions</p>
-              </div>
-              <Switch
-                id="exclude-mastered"
-                checked={excludePreviouslyCorrect}
-                onCheckedChange={setExcludePreviouslyCorrect}
-              />
-            </div>
+            <ToggleRow
+              id="exclude-mastered"
+              checked={excludePreviouslyCorrect}
+              onChange={setExcludePreviouslyCorrect}
+              title="Exclude previously mastered words"
+              description="Skip words you've spelled correctly in previous sessions"
+            />
 
             {excludePreviouslyCorrect && masteredWords.length > 0 && (
               <Alert>
@@ -224,7 +218,7 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
             )}
           </div>
 
-          {/* Start Session Button */}
+          {/* start button ---------------------------------------------- */}
           <div className="flex justify-center">
             <Button
               onClick={() => {
@@ -248,7 +242,7 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
         </CardContent>
       </Card>
 
-      {/* Start Session Dialog */}
+      {/* dialog -------------------------------------------------------- */}
       <Dialog open={showStartDialog} onOpenChange={setShowStartDialog}>
         <DialogContent>
           <DialogHeader>
@@ -270,14 +264,8 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
             <div className="p-4 bg-gray-50 rounded-lg space-y-2">
               <h4 className="font-medium">Session Details</h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600">Word List:</span>
-                  <p className="font-medium">{wordListName}</p>
-                </div>
-                <div>
-                  <span className="text-gray-600">Words to Practice:</span>
-                  <p className="font-medium">{availableWords.length}</p>
-                </div>
+                <Detail label="Word List" value={wordListName} />
+                <Detail label="Words to Practice" value={availableWords.length} />
               </div>
               <div className="flex flex-wrap gap-2">
                 {randomizeWords && (
@@ -307,3 +295,60 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
     </div>
   )
 }
+
+/* -------------------------------------------------------------------- */
+/* tiny sub-components                                                  */
+/* -------------------------------------------------------------------- */
+
+interface StatCardProps {
+  icon: React.ElementType
+  label: string
+  value: number
+  color: "blue" | "green" | "orange"
+}
+function StatCard({ icon: Icon, label, value, color }: StatCardProps) {
+  const colors: Record<string, string> = {
+    blue: "text-blue-600 bg-blue-50",
+    green: "text-green-600 bg-green-50",
+    orange: "text-orange-600 bg-orange-50",
+  }
+  return (
+    <div className={`p-4 rounded-lg ${colors[color]}`}>
+      <div className="flex items-center gap-2 mb-2">
+        <Icon className={`w-4 h-4 ${colors[color].split(" ")[0]}`} />
+        <span className={`text-sm font-medium ${colors[color].split(" ")[0].replace("text-", "text-")}`}>{label}</span>
+      </div>
+      <p className="text-2xl font-bold">{value}</p>
+    </div>
+  )
+}
+
+interface ToggleRowProps {
+  id: string
+  title: string
+  description: string
+  checked: boolean
+  onChange: (v: boolean) => void
+}
+function ToggleRow({ id, title, description, checked, onChange }: ToggleRowProps) {
+  return (
+    <div className="flex items-center justify-between">
+      <div className="space-y-1">
+        <Label htmlFor={id}>{title}</Label>
+        <p className="text-sm text-gray-500">{description}</p>
+      </div>
+      <Switch id={id} checked={checked} onCheckedChange={onChange} />
+    </div>
+  )
+}
+
+interface DetailProps {
+  label: string
+  value: string | number
+}
+const Detail = ({ label, value }: DetailProps) => (
+  <div>
+    <span className="text-gray-600">{label}:</span>
+    <p className="font-medium">{value}</p>
+  </div>
+)
