@@ -52,6 +52,8 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
   const [error, setError] = useState("")
   const [correctCount, setCorrectCount] = useState(0)
   const [incorrectCount, setIncorrectCount] = useState(0)
+  const [randomizeWords, setRandomizeWords] = useState(false)
+  const [shuffledWords, setShuffledWords] = useState<string[]>([])
 
   // Set current word when index changes
   useEffect(() => {
@@ -60,6 +62,26 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
       resetWordState()
     }
   }, [currentWordIndex, words])
+
+  // Handle word randomization
+  useEffect(() => {
+    if (randomizeWords) {
+      const shuffled = [...words].sort(() => Math.random() - 0.5)
+      setShuffledWords(shuffled)
+    } else {
+      setShuffledWords(words)
+    }
+    setCurrentWordIndex(0) // Reset to first word when toggling
+  }, [words, randomizeWords])
+
+  // Update current word to use shuffled words
+  useEffect(() => {
+    const wordsToUse = shuffledWords.length > 0 ? shuffledWords : words
+    if (wordsToUse.length > 0 && currentWordIndex < wordsToUse.length) {
+      setCurrentWord(wordsToUse[currentWordIndex])
+      resetWordState()
+    }
+  }, [currentWordIndex, shuffledWords, words])
 
   const resetWordState = () => {
     setWordData(null)
@@ -179,7 +201,8 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
 
   const nextWord = () => {
     clearFeedback() // Clear feedback before moving to next word
-    if (currentWordIndex < words.length - 1) {
+    const wordsToUse = shuffledWords.length > 0 ? shuffledWords : words
+    if (currentWordIndex < wordsToUse.length - 1) {
       setCurrentWordIndex(currentWordIndex + 1)
     } else {
       // Wrap around to beginning
@@ -227,7 +250,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
                 Practice Mode
               </CardTitle>
               <CardDescription>
-                Word {currentWordIndex + 1} of {words.length}
+                Word {currentWordIndex + 1} of {shuffledWords.length > 0 ? shuffledWords.length : words.length}
               </CardDescription>
             </div>
             <div className="flex items-center gap-4">
@@ -253,7 +276,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>
-              Current Word ({currentWordIndex + 1} of {words.length})
+              Current Word ({currentWordIndex + 1} of {shuffledWords.length > 0 ? shuffledWords.length : words.length})
             </CardTitle>
             <div className="flex items-center gap-2">
               <Button
@@ -265,6 +288,15 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
               >
                 <ArrowLeft className="w-4 h-4" />
                 Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setRandomizeWords(!randomizeWords)}
+                className={`flex items-center gap-2 ${randomizeWords ? "bg-blue-50 text-blue-600" : "bg-transparent"}`}
+              >
+                <RotateCcw className="w-4 h-4" />
+                {randomizeWords ? "Ordered" : "Random"}
               </Button>
               <Button
                 variant="outline"

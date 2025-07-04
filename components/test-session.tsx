@@ -32,6 +32,7 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
   const [showStartDialog, setShowStartDialog] = useState(false)
   const [sessionName, setSessionName] = useState("")
   const [excludePreviouslyCorrect, setExcludePreviouslyCorrect] = useState(true)
+  const [randomizeWords, setRandomizeWords] = useState(true) // Default to true for test sessions
   const [currentSession, setCurrentSession] = useState<TestSession | null>(null)
   const [availableWords, setAvailableWords] = useState<string[]>([])
   const [masteredWords, setMasteredWords] = useState<string[]>([])
@@ -81,13 +82,13 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
       setLoading(true)
       setError("")
 
-      // Shuffle words for the session
-      const shuffledWords = [...availableWords].sort(() => Math.random() - 0.5)
+      // Shuffle words for the session if randomization is enabled
+      const wordsForSession = randomizeWords ? [...availableWords].sort(() => Math.random() - 0.5) : [...availableWords]
 
       const sessionId = await sessionStorage.createSession(
         sessionName.trim(),
         wordListName,
-        shuffledWords,
+        wordsForSession,
         excludePreviouslyCorrect,
         wordListId,
       )
@@ -190,6 +191,14 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
 
             <div className="flex items-center justify-between">
               <div className="space-y-1">
+                <Label htmlFor="randomize-words">Randomize word order</Label>
+                <p className="text-sm text-gray-500">Shuffle the words for varied practice</p>
+              </div>
+              <Switch id="randomize-words" checked={randomizeWords} onCheckedChange={setRandomizeWords} />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
                 <Label htmlFor="exclude-mastered">Exclude previously mastered words</Label>
                 <p className="text-sm text-gray-500">Skip words you've spelled correctly in previous sessions</p>
               </div>
@@ -270,11 +279,18 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey }
                   <p className="font-medium">{availableWords.length}</p>
                 </div>
               </div>
-              {excludePreviouslyCorrect && masteredWords.length > 0 && (
-                <Badge variant="secondary" className="text-xs">
-                  Excluding {masteredWords.length} mastered words
-                </Badge>
-              )}
+              <div className="flex flex-wrap gap-2">
+                {randomizeWords && (
+                  <Badge variant="secondary" className="text-xs">
+                    Randomized order
+                  </Badge>
+                )}
+                {excludePreviouslyCorrect && masteredWords.length > 0 && (
+                  <Badge variant="secondary" className="text-xs">
+                    Excluding {masteredWords.length} mastered words
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
 
