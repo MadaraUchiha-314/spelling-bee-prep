@@ -23,6 +23,8 @@ import {
   ThumbsDown,
   Headphones,
   ChevronDown,
+  Copy,
+  Check,
 } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
@@ -61,6 +63,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
   const [randomizeWords, setRandomizeWords] = useState(false)
   const [shuffledWords, setShuffledWords] = useState<string[]>([])
   const [isPracticeOpen, setIsPracticeOpen] = useState(true)
+  const [isCopied, setIsCopied] = useState(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
@@ -163,6 +166,15 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
       const utterance = new SpeechSynthesisUtterance(currentWord)
       utterance.rate = 0.7
       speechSynthesis.speak(utterance)
+    }
+  }
+
+  const copyWord = () => {
+    if (currentWord) {
+      navigator.clipboard.writeText(currentWord).then(() => {
+        setIsCopied(true)
+        setTimeout(() => setIsCopied(false), 2000)
+      })
     }
   }
 
@@ -346,6 +358,10 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
               >
                 {showWord ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 {showWord ? "Hide" : "Show"} Word
+              </Button>
+              <Button variant="outline" size="sm" onClick={copyWord} className="flex items-center gap-2 bg-transparent">
+                {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {isCopied ? "Copied!" : "Copy Word"}
               </Button>
               <Button variant="outline" size="sm" onClick={skipWord} className="flex items-center gap-2 bg-transparent">
                 <ArrowRight className="w-4 h-4" />

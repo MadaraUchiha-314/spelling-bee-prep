@@ -18,6 +18,8 @@ import {
   Trophy,
   Headphones,
   ChevronDown,
+  Copy,
+  Check,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -76,6 +78,7 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
   const [completionOpen, setCompletionOpen] = useState(false)
   const [isPracticeOpen, setIsPracticeOpen] = useState(true)
   const [isAdvancing, setIsAdvancing] = useState(false)
+  const [isCopied, setIsCopied] = useState(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const lastWordRef = useRef<string>("")
 
@@ -155,6 +158,15 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
       const u = new SpeechSynthesisUtterance(currentWord)
       u.rate = 0.7
       speechSynthesis.speak(u)
+    }
+  }
+
+  const copyWord = () => {
+    if (currentWord) {
+      navigator.clipboard.writeText(currentWord).then(() => {
+        setIsCopied(true)
+        setTimeout(() => setIsCopied(false), 2000)
+      })
     }
   }
 
@@ -315,6 +327,11 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
                     <Eye className="w-4 h-4" /> Show Word
                   </>
                 )}
+              </Button>
+
+              <Button variant="outline" size="sm" onClick={copyWord} className="flex items-center gap-2 bg-transparent">
+                {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {isCopied ? "Copied!" : "Copy Word"}
               </Button>
 
               <Button variant="outline" size="sm" onClick={nextWord} className="bg-transparent">
