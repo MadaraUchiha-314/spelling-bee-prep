@@ -28,58 +28,63 @@ class WordListStorage {
     }
 
     return new Promise((resolve, reject) => {
-      const tx = db.transaction([this.storeName], "readwrite")
-      const store = tx.objectStore(this.storeName)
-      const req = store.add(wordList)
-
-      req.onerror = () => reject(req.error)
-      req.onsuccess = () => resolve(id)
+      const transaction = db.transaction(this.storeName, "readwrite")
+      transaction.oncomplete = () => resolve(id)
+      transaction.onerror = () => reject(transaction.error)
+      transaction.objectStore(this.storeName).add(wordList)
     })
   }
 
   async getAllWordLists(): Promise<SavedWordList[]> {
     const db = await this.db()
     return new Promise((resolve, reject) => {
-      const req = db.transaction([this.storeName], "readonly").objectStore(this.storeName).getAll()
-      req.onerror = () => reject(req.error)
-      req.onsuccess = () =>
-        resolve(req.result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))
+      const request = db.transaction(this.storeName, "readonly").objectStore(this.storeName).getAll()
+      request.onerror = () => reject(request.error)
+      request.onsuccess = () =>
+        resolve(request.result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))
     })
   }
 
-  async getWordList(id: string) {
+  async getWordList(id: string): Promise<SavedWordList | null> {
     const db = await this.db()
-    return new Promise<SavedWordList | null>((resolve, reject) => {
-      const req = db.transaction([this.storeName], "readonly").objectStore(this.storeName).get(id)
-      req.onerror = () => reject(req.error)
-      req.onsuccess = () => resolve(req.result || null)
+    return new Promise((resolve, reject) => {
+      const request = db.transaction(this.storeName, "readonly").objectStore(this.storeName).get(id)
+      request.onerror = () => reject(request.error)
+      request.onsuccess = () => resolve(request.result || null)
     })
   }
 
-  async deleteWordList(id: string) {
+  async deleteWordList(id: string): Promise<void> {
     const db = await this.db()
-    return new Promise<void>((resolve, reject) => {
-      const req = db.transaction([this.storeName], "readwrite").objectStore(this.storeName).delete(id)
-      req.onerror = () => reject(req.error)
-      req.onsuccess = () => resolve()
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(this.storeName, "readwrite")
+      transaction.oncomplete = () => resolve()
+      transaction.onerror = () => reject(transaction.error)
+      transaction.objectStore(this.storeName).delete(id)
     })
   }
 
-  async updateWordListName(id: string, newName: string) {
+  async updateWordListName(id: string, newName: string): Promise<void> {
     const db = await this.db()
-    return new Promise<void>((resolve, reject) => {
-      const store = db.transaction([this.storeName], "readwrite").objectStore(this.storeName)
-      const getReq = store.get(id)
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(this.storeName, "readwrite")
+      transaction.oncomplete = () => resolve()
+      transaction.onerror = () => reject(transaction.error)
 
-      getReq.onerror = () => reject(getReq.error)
-      getReq.onsuccess = () => {
-        const data = getReq.result
-        if (!data) return reject(new Error("Word list not found"))
-        data.name = newName
-        const putReq = store.put(data)
-        putReq.onerror = () => reject(putReq.error)
-        putReq.onsuccess = () => resolve()
+      const store = transaction.objectStore(this.storeName)
+      const getRequest = store.get(id)
+
+      getRequest.onsuccess = () => {
+        const data = getRequest.result
+        if (data) {
+          data.name = newName
+          store.put(data)
+        } else {
+          transaction.abort()
+          reject(new Error("Word list not found for update"))
+        }
       }
+      getRequest.onerror = () => reject(getRequest.error)
     })
   }
 }
