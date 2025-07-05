@@ -1,6 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import type React from "react"
+
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -9,9 +11,9 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog"
 import {
   AlertDialog,
@@ -39,6 +41,7 @@ import {
   Play,
   ChevronDown,
   Download,
+  Upload,
 } from "lucide-react"
 import { sessionStorage, type TestSession, type SessionStats } from "@/lib/session-storage"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -58,6 +61,7 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
   const [isStatsOpen, setIsStatsOpen] = useState(true)
   const [isHistoryOpen, setIsHistoryOpen] = useState(true)
   const [sessionToDelete, setSessionToDelete] = useState<TestSession | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     loadData()
@@ -176,6 +180,61 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
     URL.revokeObjectURL(url)
   }
 
+  const handleExportSessionJSON = (session: TestSession | null) => {
+    if (!session) return
+
+    const fileContent = JSON.stringify(session, null, 2)
+    const blob = new Blob([fileContent], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    const sessionDate = new Date(session.startTime).toISOString().split("T")[0]
+    link.download = `Session-${session.name.replace(/\s+/g, "-")}-${sessionDate}.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      try {
+        const content = e.target?.result
+        if (typeof content !== "string") {
+          throw new Error("Failed to read file content.")
+        }
+        const sessionData = JSON.parse(content)
+
+        await sessionStorage.importSession(sessionData)
+        alert("Session imported successfully!")
+        await loadData()
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err)
+        console.error("Failed to import session:", errorMessage)
+        setError(`Failed to import session: ${errorMessage}`)
+        alert(`Error importing session: ${errorMessage}`)
+      } finally {
+        if (event.target) {
+          event.target.value = ""
+        }
+      }
+    }
+    reader.onerror = () => {
+      const errorMessage = "Failed to read the selected file."
+      setError(errorMessage)
+      alert(errorMessage)
+    }
+    reader.readAsText(file)
+  }
+
   if (loading) {
     return (
       <Card>
@@ -270,15 +329,27 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
                 className={`h-5 w-5 shrink-0 transition-transform duration-300 ${isHistoryOpen ? "rotate-180" : ""}`}
               />
             </CollapsibleTrigger>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadData}
-              className="ml-4 flex items-center gap-2 bg-transparent"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Refresh
-            </Button>
+            <div className="flex items-center ml-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleImportClick}
+                className="flex items-center gap-2 bg-transparent"
+              >
+                <Upload className="w-4 h-4" />
+                Import
+              </Button>
+              <input type="file" ref={fileInputRef} onChange={handleFileSelected} accept=".json" className="hidden" />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadData}
+                className="ml-2 flex items-center gap-2 bg-transparent"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Refresh
+              </Button>
+            </div>
           </div>
           <CollapsibleContent>
             <CardContent className="pt-0">
@@ -473,7 +544,7 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
               </div>
             )}
           </div>
-          <DialogFooter className="pt-4 mt-auto">
+          <DialogFooter className="pt-4 mt-auto flex items-center gap-2">
             <Button
               variant="outline"
               onClick={() => handleExportSession(selectedSession)}
@@ -482,6 +553,15 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
             >
               <Download className="w-4 h-4" />
               Export as TXT
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleExportSessionJSON(selectedSession)}
+              className="flex items-center gap-2"
+              disabled={!selectedSession}
+            >
+              <Download className="w-4 h-4" />
+              Export as JSON
             </Button>
           </DialogFooter>
         </DialogContent>

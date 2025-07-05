@@ -188,6 +188,34 @@ class SessionStorage {
     const stats = await this.getStats()
     return stats.masteredWords
   }
+
+  async importSession(sessionData: TestSession) {
+    const db = await this.db()
+    // Create a new object to avoid modifying the original
+    const importedSession: TestSession = {
+      ...sessionData,
+      id: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // New unique ID
+      name: `${sessionData.name} (Imported)`,
+      startTime: new Date(), // Set import time as start time
+      isCompleted: sessionData.isCompleted,
+      // If the original session was completed, set a new end time for the import record
+      endTime: sessionData.isCompleted ? new Date() : undefined,
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      // Basic validation
+      if (
+        !importedSession.name ||
+        typeof importedSession.wordsAsked === "undefined" ||
+        typeof importedSession.attempts === "undefined"
+      ) {
+        return reject(new Error("Invalid session file format."))
+      }
+      const req = db.transaction([this.sessionStore], "readwrite").objectStore(this.sessionStore).add(importedSession)
+      req.onerror = () => reject(req.error)
+      req.onsuccess = () => resolve()
+    })
+  }
 }
 
 export const sessionStorage = new SessionStorage()
