@@ -5,7 +5,14 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,6 +38,7 @@ import {
   TrendingUp,
   Play,
   ChevronDown,
+  Download,
 } from "lucide-react"
 import { sessionStorage, type TestSession, type SessionStats } from "@/lib/session-storage"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -126,6 +134,46 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
 
   const canResumeSession = (session: TestSession) => {
     return !session.isCompleted && session.attempts.length < session.wordsAsked.length
+  }
+
+  const handleExportSession = (session: TestSession | null) => {
+    if (!session) return
+
+    const correctWords = session.attempts
+      .filter((a) => a.isCorrect)
+      .map((a) => a.word)
+      .sort((a, b) => a.localeCompare(b))
+
+    const incorrectWords = session.attempts
+      .filter((a) => !a.isCorrect)
+      .map((a) => a.word)
+      .sort((a, b) => a.localeCompare(b))
+
+    let fileContent = `Session Results: ${session.name}\n`
+    fileContent += `Date: ${formatDate(session.startTime)}\n`
+    fileContent += `Word List: ${session.wordListName}\n`
+    fileContent += `Accuracy: ${getAccuracy(session)}%\n`
+    fileContent += "----------------------------------------\n\n"
+
+    fileContent += `CORRECTLY SPELLED WORDS (${correctWords.length}):\n`
+    fileContent += "--------------------------\n"
+    fileContent += correctWords.length > 0 ? correctWords.join("\n") : "None"
+    fileContent += "\n\n"
+
+    fileContent += `INCORRECTLY SPELLED WORDS (${incorrectWords.length}):\n`
+    fileContent += "----------------------------\n"
+    fileContent += incorrectWords.length > 0 ? incorrectWords.join("\n") : "None"
+
+    const blob = new Blob([fileContent], { type: "text/plain;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    const sessionDate = new Date(session.startTime).toISOString().split("T")[0]
+    link.download = `Session-Results-${session.name.replace(/\s+/g, "-")}-${sessionDate}.txt`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
   }
 
   if (loading) {
@@ -342,87 +390,100 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
 
       {/* Session Details Dialog */}
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{selectedSession?.name || "Session Details"}</DialogTitle>
             <DialogDescription>Session details and word-by-word results</DialogDescription>
           </DialogHeader>
 
-          {selectedSession && (
-            <div className="space-y-4">
-              {/* Session Info */}
-              <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <span className="text-sm text-gray-600">Word List:</span>
-                  <p className="font-medium">{selectedSession.wordListName}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">Duration:</span>
-                  <p className="font-medium">{formatDuration(selectedSession.startTime, selectedSession.endTime)}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">Total Words:</span>
-                  <p className="font-medium">{selectedSession.totalWords}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">Accuracy:</span>
-                  <p className="font-medium">{getAccuracy(selectedSession)}%</p>
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Word Results */}
-              <div>
-                <h4 className="font-medium mb-3">Word Results</h4>
-                {selectedSession.attempts.length > 0 ? (
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {selectedSession.attempts.map((attempt, index) => (
-                      <div
-                        key={index}
-                        className={`flex items-center justify-between p-3 rounded-lg ${
-                          attempt.isCorrect ? "bg-green-50" : "bg-red-50"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          {attempt.isCorrect ? (
-                            <CheckCircle className="w-4 h-4 text-green-600" />
-                          ) : (
-                            <XCircle className="w-4 h-4 text-red-600" />
-                          )}
-                          <div>
-                            <p className="font-medium">{attempt.word}</p>
-                            {!attempt.isCorrect && attempt.userSpelling && (
-                              <p className="text-sm text-gray-600">Your spelling: {attempt.userSpelling}</p>
-                            )}
-                          </div>
-                        </div>
-                        <Badge variant={attempt.isCorrect ? "default" : "destructive"} className="text-xs">
-                          {attempt.isCorrect ? "Correct" : "Incorrect"}
-                        </Badge>
-                      </div>
-                    ))}
+          <div className="flex-grow overflow-y-auto pr-2">
+            {selectedSession && (
+              <div className="space-y-4">
+                {/* Session Info */}
+                <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <span className="text-sm text-gray-600">Word List:</span>
+                    <p className="font-medium">{selectedSession.wordListName}</p>
                   </div>
-                ) : (
-                  <p className="text-gray-500 text-sm">No attempts recorded for this session.</p>
+                  <div>
+                    <span className="text-sm text-gray-600">Duration:</span>
+                    <p className="font-medium">{formatDuration(selectedSession.startTime, selectedSession.endTime)}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-600">Total Words:</span>
+                    <p className="font-medium">{selectedSession.totalWords}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-600">Accuracy:</span>
+                    <p className="font-medium">{getAccuracy(selectedSession)}%</p>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Word Results */}
+                <div>
+                  <h4 className="font-medium mb-3">Word Results</h4>
+                  {selectedSession.attempts.length > 0 ? (
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {selectedSession.attempts.map((attempt, index) => (
+                        <div
+                          key={index}
+                          className={`flex items-center justify-between p-3 rounded-lg ${
+                            attempt.isCorrect ? "bg-green-50" : "bg-red-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            {attempt.isCorrect ? (
+                              <CheckCircle className="w-4 h-4 text-green-600" />
+                            ) : (
+                              <XCircle className="w-4 h-4 text-red-600" />
+                            )}
+                            <div>
+                              <p className="font-medium">{attempt.word}</p>
+                              {!attempt.isCorrect && attempt.userSpelling && (
+                                <p className="text-sm text-gray-600">Your spelling: {attempt.userSpelling}</p>
+                              )}
+                            </div>
+                          </div>
+                          <Badge variant={attempt.isCorrect ? "default" : "destructive"} className="text-xs">
+                            {attempt.isCorrect ? "Correct" : "Incorrect"}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-sm">No attempts recorded for this session.</p>
+                  )}
+                </div>
+
+                {/* Unattempted Words */}
+                {selectedSession.wordsAsked.length > selectedSession.attempts.length && (
+                  <div>
+                    <h4 className="font-medium mb-3">Unattempted Words</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedSession.wordsAsked.slice(selectedSession.attempts.length).map((word, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {word}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
-
-              {/* Unattempted Words */}
-              {selectedSession.wordsAsked.length > selectedSession.attempts.length && (
-                <div>
-                  <h4 className="font-medium mb-3">Unattempted Words</h4>
-                  <div className="flex flex-wrap gap-1">
-                    {selectedSession.wordsAsked.slice(selectedSession.attempts.length).map((word, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {word}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+            )}
+          </div>
+          <DialogFooter className="pt-4 mt-auto">
+            <Button
+              variant="outline"
+              onClick={() => handleExportSession(selectedSession)}
+              className="flex items-center gap-2"
+              disabled={!selectedSession || selectedSession.attempts.length === 0}
+            >
+              <Download className="w-4 h-4" />
+              Export as TXT
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
