@@ -20,17 +20,18 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { BookOpen, Trash2, Edit, Calendar, FileText, Download, RefreshCw, ChevronDown } from "lucide-react"
-import { wordListStorage, type SavedWordList } from "@/lib/word-list-storage"
+import { wordListStorage, type SavedWordList, type AvailableWordList } from "@/lib/word-list-storage"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { toast } from "sonner"
 
 interface SavedWordListsProps {
   lists: SavedWordList[]
+  availableLists: AvailableWordList[]
   onWordListSelected: (words: string[], name: string, id?: string) => void
   onListsUpdated: () => void
 }
 
-export function SavedWordLists({ lists, onWordListSelected, onListsUpdated }: SavedWordListsProps) {
+export function SavedWordLists({ lists, availableLists, onWordListSelected, onListsUpdated }: SavedWordListsProps) {
   const [error, setError] = useState("")
   const [editingList, setEditingList] = useState<SavedWordList | null>(null)
   const [newName, setNewName] = useState("")
@@ -146,12 +147,23 @@ export function SavedWordLists({ lists, onWordListSelected, onListsUpdated }: Sa
                         <Badge variant="secondary" className="text-xs">
                           {list.wordCount} words
                         </Badge>
+                        {list.id === availableLists[0]?.id && (
+                          <Badge variant="outline" className="text-xs text-blue-600 border-blue-200">
+                            Default
+                          </Badge>
+                        )}
                       </div>
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
                           {formatDate(list.createdAt)}
                         </span>
+                        {list.id === availableLists[0]?.id && (
+                          <span className="flex items-center gap-1">
+                            <FileText className="w-3 h-3" />
+                            {availableLists[0]?.path.replace('/data/', 'data/')}
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -190,6 +202,7 @@ export function SavedWordLists({ lists, onWordListSelected, onListsUpdated }: Sa
                               setNewName(list.name)
                             }}
                             className="flex items-center gap-1"
+                            disabled={list.id === availableLists[0]?.id}
                           >
                             <Edit className="w-3 h-3" />
                           </Button>
@@ -219,6 +232,7 @@ export function SavedWordLists({ lists, onWordListSelected, onListsUpdated }: Sa
                             variant="outline"
                             size="sm"
                             className="flex items-center gap-1 text-red-600 hover:text-red-700 bg-transparent"
+                            disabled={list.id === availableLists[0]?.id}
                           >
                             <Trash2 className="w-3 h-3" />
                           </Button>

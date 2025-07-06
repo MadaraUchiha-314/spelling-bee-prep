@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
 import { WordListUpload } from "@/components/word-list-upload"
 import { SavedWordLists } from "@/components/saved-word-lists"
 import { ApiKeyManager } from "@/components/api-key-manager"
@@ -13,18 +14,19 @@ import { SessionHistory } from "@/components/session-history"
 import { SessionPractice } from "@/components/session-practice"
 import { BookOpen, Settings, Play, Archive, Trophy, History, ChevronDown } from "lucide-react"
 import { sessionStorage, type TestSession } from "@/lib/session-storage"
-import { wordListStorage, type SavedWordList } from "@/lib/word-list-storage"
+import { wordListStorage, type SavedWordList, type AvailableWordList } from "@/lib/word-list-storage"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
 export default function SpellingBeeApp() {
   const [words, setWords] = useState<string[]>([])
   const [filteredWords, setFilteredWords] = useState<string[]>([])
   const [apiKey, setApiKey] = useState<string>("")
-  const [activeTab, setActiveTab] = useState("upload")
+  const [activeTab, setActiveTab] = useState("practice")
   const [currentListName, setCurrentListName] = useState<string>("")
   const [currentListId, setCurrentListId] = useState<string>("")
   const [currentSession, setCurrentSession] = useState<TestSession | null>(null)
   const [savedLists, setSavedLists] = useState<SavedWordList[]>([])
+  const [availableLists, setAvailableLists] = useState<AvailableWordList[]>([])
   const [isUploadOpen, setIsUploadOpen] = useState(true)
   const [isSettingsOpen, setIsSettingsOpen] = useState(true)
 
@@ -37,6 +39,32 @@ export default function SpellingBeeApp() {
     }
   }, [])
 
+  const loadAvailableLists = useCallback(async () => {
+    try {
+      const lists = await wordListStorage.getAvailableWordLists()
+      setAvailableLists(lists)
+    } catch (err) {
+      console.error("Failed to load available lists:", err)
+    }
+  }, [])
+
+  const loadDefaultWordList = useCallback(async () => {
+    try {
+      // First, ensure the default word list is loaded
+      const defaultList = await wordListStorage.loadDefaultWordList()
+      
+      // If no word list is currently selected and we have a default list, use it
+      if (words.length === 0 && defaultList) {
+        setWords(defaultList.words)
+        setFilteredWords(defaultList.words)
+        setCurrentListName(defaultList.name)
+        setCurrentListId(defaultList.id)
+      }
+    } catch (err) {
+      console.error("Failed to load default word list:", err)
+    }
+  }, [words.length])
+
   useEffect(() => {
     const savedApiKey = localStorage.getItem("spelling-bee-api-key")
     if (savedApiKey) {
@@ -44,7 +72,9 @@ export default function SpellingBeeApp() {
     }
     loadActiveSession()
     loadSavedLists()
-  }, [loadSavedLists])
+    loadAvailableLists()
+    loadDefaultWordList()
+  }, [loadSavedLists, loadAvailableLists, loadDefaultWordList])
 
   const loadActiveSession = async () => {
     try {
@@ -171,6 +201,7 @@ export default function SpellingBeeApp() {
           <TabsContent value="saved" className="space-y-6">
             <SavedWordLists
               lists={savedLists}
+              availableLists={availableLists}
               onWordListSelected={handleSavedListSelected}
               onListsUpdated={loadSavedLists}
             />
@@ -191,9 +222,21 @@ export default function SpellingBeeApp() {
               <>
                 <Card>
                   <CardHeader>
-                    <CardTitle>Current Word List</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                      Current Word List
+                      {currentListId === availableLists[0]?.id && (
+                        <Badge variant="outline" className="text-xs text-blue-600 border-blue-200">
+                          Default List
+                        </Badge>
+                      )}
+                    </CardTitle>
                     <CardDescription>
                       {currentListName} - {words.length} words total
+                      {currentListId === availableLists[0]?.id && (
+                        <span className="block text-xs text-gray-500 mt-1">
+                          Source: {availableLists[0]?.path.replace('/data/', 'data/')}
+                        </span>
+                      )}
                     </CardDescription>
                   </CardHeader>
                 </Card>
