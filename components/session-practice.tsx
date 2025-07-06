@@ -48,6 +48,7 @@ interface WordData {
   definition?: string
   etymology?: string
   example?: string
+  audioUrl?: string
 }
 
 interface SessionPracticeProps {
@@ -118,10 +119,10 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentWordIndex, currentSession.wordsAsked])
 
-  const fetchWordData = async (word: string) => {
+  const fetchWordData = async (word: string): Promise<WordData | null> => {
     if (!apiKey) {
       setError("Please configure your API key in Settings")
-      return
+      return null
     }
 
     setLoading(true)
@@ -135,29 +136,69 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
 
       if (Array.isArray(data) && data.length > 0 && typeof data[0] === "object") {
         const entry = data[0]
-        setWordData({
+        const sound = entry.hwi?.prs?.[0]?.sound
+        let audioUrl: string | undefined = undefined
+
+        if (sound?.audio) {
+          const subdirectory = sound.audio.startsWith("bix")
+            ? "bix"
+            : sound.audio.startsWith("gg")
+              ? "gg"
+              : sound.audio.match(/^[^a-zA-Z]/)
+                ? "number"
+                : sound.audio.charAt(0)
+          audioUrl = `https://media.merriam-webster.com/audio/prons/en/us/mp3/${subdirectory}/${sound.audio}.mp3`
+        }
+
+        const newWordData: WordData = {
           word,
           pronunciation: entry.hwi?.prs?.[0]?.mw || "",
           partOfSpeech: entry.fl || "",
           definition: entry.shortdef?.[0] || "",
           etymology: entry.et?.[0]?.[1] || "",
           example: entry.def?.[0]?.sseq?.[0]?.[0]?.[1]?.dt?.find((d: any) => d[0] === "vis")?.[1]?.[0]?.t || "",
-        })
+          audioUrl: audioUrl,
+        }
+        setWordData(newWordData)
+        return newWordData
       } else {
         setError("Word not found in dictionary")
+        return null
       }
     } catch {
       setError("Failed to fetch word data. Please check your API key.")
+      return null
     } finally {
       setLoading(false)
     }
   }
 
-  const speakWord = () => {
+  const speakWordFallback = () => {
     if ("speechSynthesis" in window) {
       const u = new SpeechSynthesisUtterance(currentWord)
       u.rate = 0.7
       speechSynthesis.speak(u)
+    }
+  }
+
+  const playPronunciation = (data: WordData | null) => {
+    if (data?.audioUrl) {
+      const audio = new Audio(data.audioUrl)
+      audio.play().catch((err) => {
+        console.error("Audio playback failed, using fallback:", err)
+        speakWordFallback()
+      })
+    } else {
+      speakWordFallback()
+    }
+  }
+
+  const handlePronounceClick = async () => {
+    if (wordData) {
+      playPronunciation(wordData)
+    } else {
+      const fetchedData = await fetchWordData(currentWord)
+      playPronunciation(fetchedData)
     }
   }
 
@@ -351,8 +392,13 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                <Button variant="outline" onClick={speakWord} className="bg-transparent gap-2">
-                  <Volume2 className="w-4 h-4" /> Pronounce
+                <Button
+                  variant={wordData?.audioUrl ? "secondary" : "outline"}
+                  onClick={handlePronounceClick}
+                  disabled={loading}
+                  className="gap-2"
+                >
+                  <Volume2 className="w-4 h-4" /> Pronounce {wordData?.audioUrl ? "(MW)" : ""}
                 </Button>
 
                 <Button
