@@ -1,292 +1,80 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { WordListUpload } from "@/components/word-list-upload"
-import { SavedWordLists } from "@/components/saved-word-lists"
-import { ApiKeyManager } from "@/components/api-key-manager"
-import { WordPractice } from "@/components/word-practice"
-import { WordFilter } from "@/components/word-filter"
-import { TestSessionComponent } from "@/components/test-session"
-import { SessionHistory } from "@/components/session-history"
-import { SessionPractice } from "@/components/session-practice"
-import { BookOpen, Settings, Play, Archive, Trophy, History, ChevronDown } from "lucide-react"
-import { sessionStorage, type TestSession } from "@/lib/session-storage"
-import { wordListStorage, type SavedWordList, type AvailableWordList } from "@/lib/word-list-storage"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Button } from "@/components/ui/button"
+import { BookOpen, Play, Trophy, Archive } from "lucide-react"
+import Link from "next/link"
 
-export default function SpellingBeeApp() {
-  const [words, setWords] = useState<string[]>([])
-  const [filteredWords, setFilteredWords] = useState<string[]>([])
-  const [apiKey, setApiKey] = useState<string>("")
-  const [activeTab, setActiveTab] = useState("practice")
-  const [currentListName, setCurrentListName] = useState<string>("")
-  const [currentListId, setCurrentListId] = useState<string>("")
-  const [currentSession, setCurrentSession] = useState<TestSession | null>(null)
-  const [savedLists, setSavedLists] = useState<SavedWordList[]>([])
-  const [availableLists, setAvailableLists] = useState<AvailableWordList[]>([])
-  const [isUploadOpen, setIsUploadOpen] = useState(true)
-  const [isSettingsOpen, setIsSettingsOpen] = useState(true)
-
-  const loadSavedLists = useCallback(async () => {
-    try {
-      const lists = await wordListStorage.getAllWordLists()
-      setSavedLists(lists)
-    } catch (err) {
-      console.error("Failed to load saved lists:", err)
-    }
-  }, [])
-
-  const loadAvailableLists = useCallback(async () => {
-    try {
-      const lists = await wordListStorage.getAvailableWordLists()
-      setAvailableLists(lists)
-    } catch (err) {
-      console.error("Failed to load available lists:", err)
-    }
-  }, [])
-
-  const loadDefaultWordList = useCallback(async () => {
-    try {
-      // First, ensure the default word list is loaded
-      const defaultList = await wordListStorage.loadDefaultWordList()
-      
-      // If no word list is currently selected and we have a default list, use it
-      if (words.length === 0 && defaultList) {
-        setWords(defaultList.words)
-        setFilteredWords(defaultList.words)
-        setCurrentListName(defaultList.name)
-        setCurrentListId(defaultList.id)
-      }
-    } catch (err) {
-      console.error("Failed to load default word list:", err)
-    }
-  }, [words.length])
+export default function HomePage() {
+  const router = useRouter()
 
   useEffect(() => {
-    const savedApiKey = localStorage.getItem("spelling-bee-api-key")
-    if (savedApiKey) {
-      setApiKey(savedApiKey)
+    // Redirect to practice page by default
+    router.push('/practice')
+  }, [router])
+
+  const features = [
+    {
+      icon: BookOpen,
+      title: "Upload Word Lists",
+      description: "Upload your own word lists or use pre-built ones for practice",
+      href: "/upload"
+    },
+    {
+      icon: Play,
+      title: "Interactive Practice",
+      description: "Practice spelling with audio pronunciation and definitions",
+      href: "/practice"
+    },
+    {
+      icon: Trophy,
+      title: "Test Sessions",
+      description: "Take timed tests to assess your spelling progress",
+      href: "/test"
+    },
+    {
+      icon: Archive,
+      title: "Track Progress",
+      description: "Review your session history and track improvement over time",
+      href: "/history"
     }
-    loadActiveSession()
-    loadSavedLists()
-    loadAvailableLists()
-    loadDefaultWordList()
-  }, [loadSavedLists, loadAvailableLists, loadDefaultWordList])
-
-  const loadActiveSession = async () => {
-    try {
-      const sessions = await sessionStorage.getAllSessions()
-      const activeSession = sessions.find((session) => !session.isCompleted)
-      if (activeSession) {
-        setCurrentSession(activeSession)
-      }
-    } catch (err) {
-      console.error("Error loading active session:", err)
-    }
-  }
-
-  const handleWordsUploaded = (uploadedWords: string[], fileName?: string) => {
-    setWords(uploadedWords)
-    setFilteredWords(uploadedWords)
-    setCurrentListName(fileName || "Uploaded List")
-    setCurrentListId("")
-    setActiveTab("practice")
-  }
-
-  const handleWordsFiltered = (filtered: string[]) => {
-    setFilteredWords(filtered)
-  }
-
-  const handleApiKeySaved = (key: string) => {
-    setApiKey(key)
-    localStorage.setItem("spelling-bee-api-key", key)
-  }
-
-  const handleSavedListSelected = (selectedWords: string[], listName: string, listId?: string) => {
-    setWords(selectedWords)
-    setFilteredWords(selectedWords)
-    setCurrentListName(listName)
-    setCurrentListId(listId || "")
-    setActiveTab("practice")
-  }
-
-  const handleSessionStart = (session: TestSession) => {
-    setCurrentSession(session)
-    setActiveTab("test")
-  }
-
-  const handleSessionComplete = () => {
-    setCurrentSession(null)
-    setActiveTab("history")
-  }
-
-  const handleResumeSession = (session: TestSession) => {
-    setCurrentSession(session)
-    setActiveTab("test")
-  }
-
-  const handleSessionDeleted = (sessionId: string) => {
-    if (currentSession?.id === sessionId) {
-      setCurrentSession(null)
-    }
-  }
-
-  const showSessionPractice = currentSession && activeTab === "test"
+  ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Spelling Bee Trainer</h1>
-          <p className="text-lg text-gray-600">Master your spelling skills with interactive practice</p>
-        </div>
+    <div className="space-y-8">
+      <div className="text-center">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4">Welcome to Spelling Bee Trainer</h2>
+        <p className="text-gray-600 max-w-2xl mx-auto">
+          Get started by uploading a word list or selecting from saved lists, then begin practicing your spelling skills.
+        </p>
+      </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="upload" className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4" />
-              Upload
-            </TabsTrigger>
-            <TabsTrigger value="saved" className="flex items-center gap-2">
-              <Archive className="w-4 h-4" />
-              Saved Lists
-            </TabsTrigger>
-            <TabsTrigger value="practice" className="flex items-center gap-2">
-              <Play className="w-4 h-4" />
-              Practice
-            </TabsTrigger>
-            <TabsTrigger value="test" className="flex items-center gap-2">
-              <Trophy className="w-4 h-4" />
-              Test Session
-              {currentSession && !currentSession.isCompleted && (
-                <span className="ml-1 w-2 h-2 bg-orange-500 rounded-full"></span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="history" className="flex items-center gap-2">
-              <History className="w-4 h-4" />
-              History
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              Settings
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="upload" className="space-y-6">
-            <Collapsible open={isUploadOpen} onOpenChange={setIsUploadOpen} asChild>
-              <Card>
-                <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between p-6 text-left">
-                  <div>
-                    <CardTitle>Upload Word List</CardTitle>
-                    <CardDescription>
-                      Upload a text file with words (one word per line) to start practicing
-                    </CardDescription>
-                  </div>
-                  <ChevronDown
-                    className={`h-5 w-5 shrink-0 transition-transform duration-300 ${isUploadOpen ? "rotate-180" : ""}`}
-                  />
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="pt-0">
-                    <WordListUpload onWordsUploaded={handleWordsUploaded} onListSaved={loadSavedLists} />
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
-          </TabsContent>
-
-          <TabsContent value="saved" className="space-y-6">
-            <SavedWordLists
-              lists={savedLists}
-              availableLists={availableLists}
-              onWordListSelected={handleSavedListSelected}
-              onListsUpdated={loadSavedLists}
-            />
-          </TabsContent>
-
-          <TabsContent value="practice" className="space-y-6">
-            {words.length === 0 ? (
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-center text-gray-500">
-                    <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p className="text-lg font-medium mb-2">No word list selected</p>
-                    <p>Please upload a new word list or select a saved one to start practicing.</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <>
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      Current Word List
-                      {currentListId === availableLists[0]?.id && (
-                        <Badge variant="outline" className="text-xs text-blue-600 border-blue-200">
-                          Default List
-                        </Badge>
-                      )}
-                    </CardTitle>
-                    <CardDescription>
-                      {currentListName} - {words.length} words total
-                      {currentListId === availableLists[0]?.id && (
-                        <span className="block text-xs text-gray-500 mt-1">
-                          Source: {availableLists[0]?.path.replace('/data/', 'data/')}
-                        </span>
-                      )}
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-                <WordFilter words={words} onWordsFiltered={handleWordsFiltered} />
-                <WordPractice words={filteredWords} apiKey={apiKey} />
-              </>
-            )}
-          </TabsContent>
-
-          <TabsContent value="test" className="space-y-6">
-            {showSessionPractice ? (
-              <SessionPractice session={currentSession} apiKey={apiKey} onSessionComplete={handleSessionComplete} />
-            ) : (
-              <TestSessionComponent
-                words={words}
-                wordListName={currentListName}
-                wordListId={currentListId}
-                apiKey={apiKey}
-                onSessionStart={handleSessionStart}
-              />
-            )}
-          </TabsContent>
-
-          <TabsContent value="history" className="space-y-6">
-            <SessionHistory onResumeSession={handleResumeSession} onSessionDeleted={handleSessionDeleted} />
-          </TabsContent>
-
-          <TabsContent value="settings" className="space-y-6">
-            <Collapsible open={isSettingsOpen} onOpenChange={setIsSettingsOpen} asChild>
-              <Card>
-                <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between p-6 text-left">
-                  <div>
-                    <CardTitle>API Configuration</CardTitle>
-                    <CardDescription>Configure your Merriam-Webster Dictionary API key</CardDescription>
-                  </div>
-                  <ChevronDown
-                    className={`h-5 w-5 shrink-0 transition-transform duration-300 ${
-                      isSettingsOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="pt-0">
-                    <ApiKeyManager currentApiKey={apiKey} onApiKeySaved={handleApiKeySaved} />
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
-          </TabsContent>
-        </Tabs>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {features.map((feature) => {
+          const Icon = feature.icon
+          return (
+            <Card key={feature.title} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Icon className="w-5 h-5 text-blue-600" />
+                  <CardTitle className="text-lg">{feature.title}</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="mb-4">
+                  {feature.description}
+                </CardDescription>
+                <Button asChild className="w-full">
+                  <Link href={feature.href}>
+                    Get Started
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
     </div>
   )
