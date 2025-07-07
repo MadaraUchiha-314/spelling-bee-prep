@@ -4,5 +4,23 @@
     "name": "North-South Foundation 2025",
     "path": "/data/word-lists/north-south-foundation/2025/word_list.txt",
     "description": "Official word list for North-South Foundation spelling bee competition 2025"
+  },
+  {
+    "id": "scripps-2020-one-bee",
+    "name": "Scripps National Spelling Bee 2020 - One Bee",
+    "path": "/data/word-lists/scripps/2020/one-bee/word_list.txt",
+    "description": "Easy level words (797 words) from the official Scripps National Spelling Bee 2020 study guide"
+  },
+  {
+    "id": "scripps-2020-two-bee",
+    "name": "Scripps National Spelling Bee 2020 - Two Bee",
+    "path": "/data/word-lists/scripps/2020/two-bee/word_list.txt",
+    "description": "Medium level words (2,064 words) from the official Scripps National Spelling Bee 2020 study guide"
+  },
+  {
+    "id": "scripps-2020-three-bee",
+    "name": "Scripps National Spelling Bee 2020 - Three Bee",
+    "path": "/data/word-lists/scripps/2020/three-bee/word_list.txt",
+    "description": "Hard level words (1,052 words) from the official Scripps National Spelling Bee 2020 study guide"
   }
 ] 

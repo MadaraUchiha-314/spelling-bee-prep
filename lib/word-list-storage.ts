@@ -60,6 +60,34 @@ class WordListStorage {
     }
   }
 
+  async loadAvailableWordList(availableList: AvailableWordList): Promise<SavedWordList> {
+    // Check if this list already exists in database
+    const existingList = await this.getWordList(availableList.id)
+    if (existingList) {
+      return existingList
+    }
+
+    // Load the word list from the configured path
+    const words = await this.loadWordListFromPath(availableList.path)
+
+    // Save the list to the database
+    const wordList: SavedWordList = {
+      id: availableList.id,
+      name: availableList.name,
+      words,
+      createdAt: new Date(),
+      wordCount: words.length,
+    }
+
+    const db = await this.db()
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(this.storeName, "readwrite")
+      transaction.oncomplete = () => resolve(wordList)
+      transaction.onerror = () => reject(transaction.error)
+      transaction.objectStore(this.storeName).add(wordList)
+    })
+  }
+
   async loadDefaultWordList(): Promise<SavedWordList | null> {
     try {
       const availableLists = await this.getAvailableWordLists()
@@ -70,32 +98,7 @@ class WordListStorage {
 
       // Use the first available word list as default
       const defaultList = availableLists[0]
-      
-      // Check if this list already exists in database
-      const existingList = await this.getWordList(defaultList.id)
-      if (existingList) {
-        return existingList
-      }
-
-      // Load the word list from the configured path
-      const words = await this.loadWordListFromPath(defaultList.path)
-
-      // Save the list to the database
-      const wordList: SavedWordList = {
-        id: defaultList.id,
-        name: defaultList.name,
-        words,
-        createdAt: new Date(),
-        wordCount: words.length,
-      }
-
-      const db = await this.db()
-      return new Promise((resolve, reject) => {
-        const transaction = db.transaction(this.storeName, "readwrite")
-        transaction.oncomplete = () => resolve(wordList)
-        transaction.onerror = () => reject(transaction.error)
-        transaction.objectStore(this.storeName).add(wordList)
-      })
+      return await this.loadAvailableWordList(defaultList)
     } catch (error) {
       console.error('Error loading default word list:', error)
       return null

@@ -9,7 +9,7 @@ import { wordListStorage, type SavedWordList, type AvailableWordList } from "@/l
 export default function SavedPage() {
   const [savedLists, setSavedLists] = useState<SavedWordList[]>([])
   const router = useRouter()
-  const { setWords, setFilteredWords, setCurrentListName, setCurrentListId, availableLists } = useWordContext()
+  const { setWords, setFilteredWords, setCurrentListName, setCurrentListId, availableLists, currentListId } = useWordContext()
 
   const loadSavedLists = useCallback(async () => {
     try {
@@ -29,7 +29,7 @@ export default function SavedPage() {
     setFilteredWords(selectedWords)
     setCurrentListName(listName)
     setCurrentListId(listId || "")
-    router.push('/practice')
+    // router.push('/practice')
   }
 
   return (
@@ -37,6 +37,7 @@ export default function SavedPage() {
           <SavedWordLists
             lists={savedLists}
             availableLists={availableLists}
+            currentListId={currentListId}
             onWordListSelected={handleSavedListSelected}
             onListsUpdated={loadSavedLists}
           />
