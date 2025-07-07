@@ -1,4 +1,8 @@
-# Spelling bee app
+# Spelling Bee Prep
+
+<div align="center">
+  <img src="public/logo.png" alt="Spelling Bee Prep Logo" width="200" height="200">
+</div>
 
 *Automatically synced with your [v0.dev](https://v0.dev) deployments*
 
@@ -9,6 +13,12 @@
 
 This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
 Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+
+## Privacy & Data Storage
+
+**🔒 Privacy First**: This web-based app is designed with your privacy in mind. All user data, including word lists, practice sessions, and progress, is stored locally in your browser using IndexedDB. No personal information is ever sent to or stored on any external servers.
+
+**📱 Local Storage**: Your spelling practice data, saved word lists, and session history remain completely private and are only accessible on your device.
 
 ## Deployment
 

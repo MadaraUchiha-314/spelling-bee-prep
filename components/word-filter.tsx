@@ -15,7 +15,7 @@ interface WordFilterProps {
 export function WordFilter({ words, onWordsFiltered }: WordFilterProps) {
   const [selectedLetters, setSelectedLetters] = useState<string[]>([])
   const [filteredWords, setFilteredWords] = useState<string[]>(words)
-  const [isOpen, setIsOpen] = useState(true)
+  const [isOpen, setIsOpen] = useState(false)
 
   // Update filtered words when words prop changes
   useEffect(() => {
