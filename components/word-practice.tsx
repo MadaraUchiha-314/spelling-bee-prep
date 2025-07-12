@@ -376,6 +376,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
                 onClick={previousWord}
                 disabled={currentWordIndex === 0}
                 className="flex items-center gap-2 bg-transparent"
+                aria-label="Previous word"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Previous
@@ -385,6 +386,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
                 size="sm"
                 onClick={() => setRandomizeWords(!randomizeWords)}
                 className={`flex items-center gap-2 ${randomizeWords ? "bg-blue-50 text-blue-600" : "bg-transparent"}`}
+                aria-label={randomizeWords ? "Show words in order" : "Randomize word order"}
               >
                 <RotateCcw className="w-4 h-4" />
                 {randomizeWords ? "Ordered" : "Random"}
@@ -394,15 +396,16 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
                 size="sm"
                 onClick={() => setShowWord(!showWord)}
                 className="flex items-center gap-2"
+                aria-label={showWord ? "Hide word" : "Show word"}
               >
                 {showWord ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 {showWord ? "Hide" : "Show"} Word
               </Button>
-              <Button variant="outline" size="sm" onClick={copyWord} className="flex items-center gap-2 bg-transparent">
+              <Button variant="outline" size="sm" onClick={copyWord} className="flex items-center gap-2 bg-transparent" aria-label="Copy word to clipboard">
                 {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 {isCopied ? "Copied!" : "Copy Word"}
               </Button>
-              <Button variant="outline" size="sm" onClick={skipWord} className="flex items-center gap-2 bg-transparent">
+              <Button variant="outline" size="sm" onClick={skipWord} className="flex items-center gap-2 bg-transparent" aria-label="Next word">
                 <ArrowRight className="w-4 h-4" />
                 Next Word
               </Button>
@@ -424,6 +427,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
                   onClick={handlePronounceClick}
                   disabled={loading}
                   className="flex items-center gap-2"
+                  aria-label="Play pronunciation audio"
                 >
                   <Volume2 className="w-4 h-4" />
                   Pronounce {wordData?.audioUrl ? "(MW)" : ""}
@@ -437,6 +441,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
                   }}
                   disabled={loading}
                   className="flex items-center gap-2"
+                  aria-label="Show phonetic spelling"
                 >
                   <Headphones className="w-4 h-4" />
                   Phonetic
@@ -450,6 +455,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
                   }}
                   disabled={loading}
                   className="flex items-center gap-2"
+                  aria-label="Show definition"
                 >
                   <BookOpen className="w-4 h-4" />
                   Definition
@@ -463,6 +469,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
                   }}
                   disabled={loading}
                   className="flex items-center gap-2"
+                  aria-label="Show etymology"
                 >
                   <FileText className="w-4 h-4" />
                   Etymology
@@ -476,6 +483,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
                   }}
                   disabled={loading}
                   className="flex items-center gap-2"
+                  aria-label="Show part of speech"
                 >
                   <MessageSquare className="w-4 h-4" />
                   Part of Speech
@@ -489,6 +497,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
                   }}
                   disabled={loading}
                   className="flex items-center gap-2"
+                  aria-label="Show usage example"
                 >
                   <MessageSquare className="w-4 h-4" />
                   Usage Example
@@ -589,6 +598,8 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
                   <Alert
                     variant={isCorrect ? "default" : "destructive"}
                     className={isCorrect ? "border-green-200 bg-green-50" : ""}
+                    aria-live="polite"
+                    role="status"
                   >
                     <div className="flex items-center gap-2">
                       {isCorrect ? (
@@ -608,13 +619,14 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
                     disabled={currentWordIndex === 0}
                     className="flex items-center gap-2 bg-transparent"
                     size="lg"
+                    aria-label="Previous word"
                   >
                     <ArrowLeft className="w-4 h-4" />
                     Previous
                   </Button>
 
                   {hasCheckedSpelling ? (
-                    <Button onClick={nextWord} className="flex items-center gap-2" size="lg">
+                    <Button onClick={nextWord} className="flex items-center gap-2" size="lg" aria-label="Next word">
                       <RotateCcw className="w-4 h-4" />
                       Next Word
                     </Button>
@@ -624,6 +636,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
                       variant="outline"
                       className="flex items-center gap-2 bg-transparent"
                       size="lg"
+                      aria-label="Next word"
                     >
                       <ArrowRight className="w-4 h-4" />
                       Next Word

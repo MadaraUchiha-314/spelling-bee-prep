@@ -354,12 +354,13 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
                 onClick={previousWord}
                 disabled={currentWordIndex === 0}
                 className="bg-transparent"
+                aria-label="Previous word"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Previous
               </Button>
 
-              <Button variant="outline" size="sm" onClick={() => setShowWord((s) => !s)}>
+              <Button variant="outline" size="sm" onClick={() => setShowWord((s) => !s)} aria-label={showWord ? "Hide word" : "Show word"}>
                 {showWord ? (
                   <>
                     <EyeOff className="w-4 h-4" /> Hide Word
@@ -371,12 +372,12 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
                 )}
               </Button>
 
-              <Button variant="outline" size="sm" onClick={copyWord} className="flex items-center gap-2 bg-transparent">
+              <Button variant="outline" size="sm" onClick={copyWord} className="flex items-center gap-2 bg-transparent" aria-label="Copy word to clipboard">
                 {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 {isCopied ? "Copied!" : "Copy Word"}
               </Button>
 
-              <Button variant="outline" size="sm" onClick={nextWord} className="bg-transparent">
+              <Button variant="outline" size="sm" onClick={nextWord} className="bg-transparent" aria-label={isLastWord ? "Finish session" : "Next word"}>
                 <ArrowRight className="w-4 h-4" />
                 {isLastWord ? "Finish Session" : "Next Word"}
               </Button>
@@ -398,6 +399,7 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
                   onClick={handlePronounceClick}
                   disabled={loading}
                   className="gap-2"
+                  aria-label="Play pronunciation audio"
                 >
                   <Volume2 className="w-4 h-4" /> Pronounce {wordData?.audioUrl ? "(MW)" : ""}
                 </Button>
@@ -410,6 +412,7 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
                     setShowPronunciation((s) => !s)
                   }}
                   className="gap-2"
+                  aria-label="Show phonetic spelling"
                 >
                   <Headphones className="w-4 h-4" /> Phonetic
                 </Button>
@@ -422,6 +425,7 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
                     setShowDefinition((s) => !s)
                   }}
                   className="gap-2"
+                  aria-label="Show definition"
                 >
                   <BookOpen className="w-4 h-4" /> Definition
                 </Button>
@@ -434,6 +438,7 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
                     setShowEtymology((s) => !s)
                   }}
                   className="gap-2"
+                  aria-label="Show etymology"
                 >
                   <FileText className="w-4 h-4" /> Etymology
                 </Button>
@@ -446,6 +451,7 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
                     setShowPartOfSpeech((s) => !s)
                   }}
                   className="gap-2"
+                  aria-label="Show part of speech"
                 >
                   <MessageSquare className="w-4 h-4" /> Part of Speech
                 </Button>
@@ -458,13 +464,14 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
                     setShowExample((s) => !s)
                   }}
                   className="gap-2"
+                  aria-label="Show usage example"
                 >
                   <MessageSquare className="w-4 h-4" /> Usage Example
                 </Button>
               </div>
 
               {error && (
-                <Alert variant="destructive">
+                <Alert variant="destructive" aria-live="assertive" role="alert">
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
@@ -557,10 +564,7 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
                 </div>
 
                 {feedback && (
-                  <Alert
-                    variant={isCorrect ? "default" : "destructive"}
-                    className={isCorrect ? "border-green-200 bg-green-50" : ""}
-                  >
+                  <Alert variant={isCorrect ? "default" : "destructive"} aria-live="polite" role="status">
                     <div className="flex items-center gap-2">
                       {isCorrect ? (
                         <CheckCircle className="w-4 h-4 text-green-600" />

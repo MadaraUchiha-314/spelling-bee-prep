@@ -68,13 +68,13 @@ export function Navigation() {
       <div className="flex sm:hidden w-full justify-start">
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           <DrawerTrigger asChild>
-            <button className="p-2 rounded-md bg-muted text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
-              <Menu className="w-6 h-6" />
+            <button className="p-2 rounded-md bg-muted text-foreground focus:outline-none focus:ring-2 focus:ring-ring" aria-label="Open navigation menu">
+              <Menu className="w-6 h-6" aria-hidden="true" />
               <span className="sr-only">Open navigation</span>
             </button>
           </DrawerTrigger>
           <DrawerContent>
-            <nav className="flex flex-col gap-2 p-4">
+            <nav className="flex flex-col gap-2 p-4" aria-label="Mobile navigation" role="navigation">
               {navItems.map((item) => {
                 const Icon = item.icon
                 const isActive = pathname === item.href
@@ -90,8 +90,9 @@ export function Navigation() {
                         ? "bg-background text-foreground shadow-sm"
                         : "text-muted-foreground"
                     )}
+                    aria-label={item.label}
                   >
-                    <Icon className="w-5 h-5" />
+                    <Icon className="w-5 h-5" aria-hidden="true" />
                     {item.label}
                     {item.badge && (
                       <span className="ml-1 w-2 h-2 bg-orange-500 rounded-full"></span>
@@ -104,7 +105,7 @@ export function Navigation() {
         </Drawer>
       </div>
       {/* Desktop Nav */}
-      <nav className="hidden sm:flex items-center justify-center space-x-1 bg-muted p-1 rounded-md overflow-x-auto flex-nowrap scrollbar-thin scrollbar-thumb-muted/40 scrollbar-track-transparent sm:space-x-1 sm:p-1 sm:text-base text-xs min-w-0">
+      <nav className="hidden sm:flex items-center justify-center space-x-1 bg-muted p-1 rounded-md overflow-x-auto flex-nowrap scrollbar-thin scrollbar-thumb-muted/40 scrollbar-track-transparent sm:space-x-1 sm:p-1 sm:text-base text-xs min-w-0" aria-label="Main navigation" role="navigation">
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href
@@ -120,8 +121,9 @@ export function Navigation() {
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground"
               )}
+              aria-label={item.label}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-4 h-4" aria-hidden="true" />
               {item.label}
               {item.badge && (
                 <span className="ml-1 w-2 h-2 bg-orange-500 rounded-full"></span>

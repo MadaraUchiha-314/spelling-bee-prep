@@ -88,7 +88,7 @@ export function WordFilter({ words, onWordsFiltered }: WordFilterProps) {
           )}
         </div>
         <CollapsibleContent>
-          <CardContent className="pt-0">
+          <CardContent className="pt-0" role="region" aria-label="Filter words by starting letter">
             <div className="flex flex-wrap gap-2 md:grid md:grid-cols-13 md:gap-2">
               {alphabet.map((letter) => {
                 const wordCount = getWordCountForLetter(letter)
@@ -105,6 +105,8 @@ export function WordFilter({ words, onWordsFiltered }: WordFilterProps) {
                     className={`relative flex flex-col items-center justify-center h-16 p-2 ${
                       isSelected ? "bg-blue-600 text-white" : ""
                     } ${!hasWords ? "opacity-50 cursor-not-allowed" : ""}`}
+                    aria-label={`Filter by letter ${letter}`}
+                    aria-pressed={isSelected}
                   >
                     <span className="text-lg font-bold">{letter}</span>
                     {hasWords && (

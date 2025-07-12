@@ -253,7 +253,7 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
       {/* Overall Stats */}
       {stats && (
         <Collapsible open={isStatsOpen} onOpenChange={setIsStatsOpen} asChild>
-          <Card>
+          <Card role="region" aria-label="Overall statistics">
             <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between p-6 text-left">
               <div>
                 <CardTitle className="flex items-center gap-2">
@@ -311,7 +311,7 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
 
       {/* Session History */}
       <Collapsible open={isHistoryOpen} onOpenChange={setIsHistoryOpen} asChild>
-        <Card>
+        <Card role="region" aria-label="Session history">
           <div className="flex items-center p-6">
             <CollapsibleTrigger className="flex flex-1 cursor-pointer items-center justify-between text-left">
               <div>
@@ -335,6 +335,7 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
                 size="sm"
                 onClick={handleImportClick}
                 className="flex items-center gap-2 bg-transparent"
+                aria-label="Import session data"
               >
                 <Upload className="w-4 h-4" />
                 Import
@@ -345,6 +346,7 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
                 size="sm"
                 onClick={loadData}
                 className="ml-2 flex items-center gap-2 bg-transparent"
+                aria-label="Refresh session history"
               >
                 <RefreshCw className="w-4 h-4" />
                 Refresh
@@ -352,9 +354,9 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
             </div>
           </div>
           <CollapsibleContent>
-            <CardContent className="pt-0">
+            <CardContent className="pt-0" role="region" aria-label="Session history list">
               {error && (
-                <Alert variant="destructive" className="mb-4">
+                <Alert variant="destructive" className="mb-4" aria-live="assertive" role="alert">
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
@@ -425,6 +427,7 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
                             size="sm"
                             onClick={() => handleResumeSession(session)}
                             className="flex items-center gap-1 bg-orange-600 hover:bg-orange-700"
+                            aria-label="Resume session"
                           >
                             <Play className="w-3 h-3" />
                             Resume
@@ -436,6 +439,7 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
                           size="sm"
                           onClick={() => handleViewDetails(session)}
                           className="flex items-center gap-1"
+                          aria-label="View session details"
                         >
                           <Eye className="w-3 h-3" />
                           Details
@@ -446,6 +450,7 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
                           size="sm"
                           className="flex items-center gap-1 text-red-600 hover:text-red-700 bg-transparent"
                           onClick={() => setSessionToDelete(session)}
+                          aria-label="Delete session"
                         >
                           <Trash2 className="w-3 h-3" />
                         </Button>
