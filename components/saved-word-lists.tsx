@@ -158,7 +158,7 @@ export function SavedWordLists({ lists, availableLists, currentListId, onWordLis
                   {unsavedAvailableLists.map((availableList) => (
                     <div
                       key={availableList.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                      className="flex items-center justify-between p-4 border rounded-lg bg-card text-card-foreground transition-colors hover:bg-muted"
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
@@ -252,7 +252,7 @@ export function SavedWordLists({ lists, availableLists, currentListId, onWordLis
                   {lists.map((list) => (
                     <div
                       key={list.id}
-                      className={`flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors ${list.id === currentListId ? 'border-blue-500 bg-blue-50' : ''}`}
+                      className={`flex items-center justify-between p-4 border rounded-lg bg-card text-card-foreground transition-colors ${list.id === currentListId ? 'border-primary bg-primary/10' : 'hover:bg-muted'}`}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
@@ -261,12 +261,12 @@ export function SavedWordLists({ lists, availableLists, currentListId, onWordLis
                             {list.wordCount} words
                           </Badge>
                           {list.id === availableLists[0]?.id && (
-                            <Badge variant="outline" className="text-xs text-blue-600 border-blue-200">
+                            <Badge variant="outline" className="text-xs text-blue-600 border-blue-200 dark:text-blue-300 dark:border-blue-400">
                               Default
                             </Badge>
                           )}
                           {list.id === currentListId && (
-                            <Badge variant="outline" className="text-xs text-green-700 border-green-300 bg-green-100">
+                            <Badge variant="outline" className="text-xs text-green-700 border-green-300 bg-green-100 dark:bg-green-900 dark:text-green-300">
                               In Use
                             </Badge>
                           )}

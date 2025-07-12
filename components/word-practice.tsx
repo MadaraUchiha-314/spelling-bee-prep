@@ -369,7 +369,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
                 className={`h-5 w-5 shrink-0 transition-transform duration-300 ${isPracticeOpen ? "rotate-180" : ""}`}
               />
             </CollapsibleTrigger>
-            <div className="flex items-center gap-2 ml-4">
+            <div className="flex flex-wrap items-center gap-2 ml-0 md:ml-4" style={{ flexFlow: 'wrap' }}>
               <Button
                 variant="outline"
                 size="sm"
@@ -418,7 +418,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
                 <Button
                   variant={wordData?.audioUrl ? "secondary" : "outline"}
                   onClick={handlePronounceClick}
@@ -551,7 +551,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
                   <label htmlFor="spelling-input" className="block text-sm font-medium mb-2">
                     Enter your spelling:
                   </label>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col md:flex-row gap-2 md:gap-3">
                     <Input
                       id="spelling-input"
                       value={userSpelling}

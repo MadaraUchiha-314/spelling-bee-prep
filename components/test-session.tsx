@@ -154,7 +154,7 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey, 
             <CardContent className="pt-0 space-y-6">
               <WordFilter words={words} onWordsFiltered={handleWordsFiltered} />
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
                 <StatCard icon={Target} label="Filtered Words" value={filteredWords.length} color="blue" />
                 <StatCard icon={CheckCircle} label="Mastered" value={masteredWords.length} color="green" />
                 <StatCard icon={Clock} label="Available" value={availableWords.length} color="orange" />
@@ -240,9 +240,9 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey, 
               />
             </div>
 
-            <div className="p-4 bg-gray-50 rounded-lg space-y-2">
+            <div className="p-4 rounded-lg bg-card text-card-foreground space-y-2">
               <h4 className="font-medium">Session Details</h4>
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4 text-sm">
                 <Detail label="Word List" value={wordListName} />
                 <Detail label="Words to Practice" value={availableWords.length} />
               </div>

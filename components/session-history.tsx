@@ -360,7 +360,7 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
               )}
 
               {sessions.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                   <Trophy className="w-12 h-12 mx-auto mb-4 opacity-50" />
                   <p className="text-lg font-medium mb-2">No sessions completed</p>
                   <p className="text-sm">Complete a test session to see your history here!</p>
@@ -370,7 +370,7 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
                   {sessions.map((session) => (
                     <div
                       key={session.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                      className="flex items-center justify-between p-4 border rounded-lg bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
@@ -384,7 +384,7 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
                             </Badge>
                           )}
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 mb-2">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 mb-2 dark:text-gray-400">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             {formatDate(session.startTime)}
@@ -471,21 +471,21 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
             {selectedSession && (
               <div className="space-y-4">
                 {/* Session Info */}
-                <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
                   <div>
-                    <span className="text-sm text-gray-600">Word List:</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-300">Word List:</span>
                     <p className="font-medium">{selectedSession.wordListName}</p>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-600">Duration:</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-300">Duration:</span>
                     <p className="font-medium">{formatDuration(selectedSession.startTime, selectedSession.endTime)}</p>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-600">Total Words:</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-300">Total Words:</span>
                     <p className="font-medium">{selectedSession.totalWords}</p>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-600">Accuracy:</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-300">Accuracy:</span>
                     <p className="font-medium">{getAccuracy(selectedSession)}%</p>
                   </div>
                 </div>
@@ -513,7 +513,7 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
                             <div>
                               <p className="font-medium">{attempt.word}</p>
                               {!attempt.isCorrect && attempt.userSpelling && (
-                                <p className="text-sm text-gray-600">Your spelling: {attempt.userSpelling}</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Your spelling: {attempt.userSpelling}</p>
                               )}
                             </div>
                           </div>
@@ -524,7 +524,7 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
                       ))}
                     </div>
                   ) : (
-                    <p className="text-gray-500 text-sm">No attempts recorded for this session.</p>
+                    <p className="text-gray-500 text-sm dark:text-gray-400">No attempts recorded for this session.</p>
                   )}
                 </div>
 
@@ -544,7 +544,7 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
               </div>
             )}
           </div>
-          <DialogFooter className="pt-4 mt-auto flex items-center gap-2">
+          <DialogFooter className="pt-4 mt-6 flex items-center gap-2">
             <Button
               variant="outline"
               onClick={() => handleExportSession(selectedSession)}

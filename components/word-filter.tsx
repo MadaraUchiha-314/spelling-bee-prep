@@ -89,7 +89,7 @@ export function WordFilter({ words, onWordsFiltered }: WordFilterProps) {
         </div>
         <CollapsibleContent>
           <CardContent className="pt-0">
-            <div className="grid grid-cols-6 md:grid-cols-13 gap-2">
+            <div className="flex flex-wrap gap-2 md:grid md:grid-cols-13 md:gap-2">
               {alphabet.map((letter) => {
                 const wordCount = getWordCountForLetter(letter)
                 const isSelected = selectedLetters.includes(letter)

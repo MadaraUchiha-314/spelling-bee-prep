@@ -26,25 +26,32 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <WordProvider>
-            <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-              <div className="flex-1 max-w-6xl mx-auto w-full px-4">
+            <div className="flex flex-col min-h-screen bg-background">
+              <div className="flex-1 max-w-6xl mx-auto w-full px-2 sm:px-4">
                 <div className="text-center mb-8 pt-4">
-                  <div className="flex items-center justify-center mb-4">
+                  {/* Mobile nav at top left */}
+                  <div className="sm:hidden flex w-full justify-start mb-2">
+                    <Navigation />
+                  </div>
+                  <div className="flex flex-col xs:flex-row items-center justify-center mb-4 gap-2 xs:gap-4">
                     <Image
                       src="/logo.png"
                       alt="Spelling Bee Trainer Logo"
                       width={60}
                       height={60}
-                      className="rounded-lg shadow-md mr-4"
+                      className="rounded-lg shadow-md mb-2 xs:mb-0 xs:mr-4"
                     />
-                    <h1 className="text-4xl font-bold text-gray-900">Spelling Bee Prep</h1>
+                    <h1 className="text-2xl sm:text-4xl font-bold text-foreground">Spelling Bee Prep</h1>
                   </div>
-                  <p className="text-lg text-gray-600 mb-6">Master your spelling skills with interactive practice</p>
-                  <Navigation />
+                  <p className="text-base sm:text-lg text-muted-foreground mb-6">Master your spelling skills with interactive practice</p>
+                  {/* Desktop nav below logo/title */}
+                  <div className="hidden sm:block">
+                    <Navigation />
+                  </div>
                 </div>
                 {children}
               </div>
-              <footer className="text-center py-3 text-sm text-gray-500 bg-white/50 border-t w-full">
+              <footer className="text-center py-4 sm:py-6 text-xs sm:text-sm text-gray-500 bg-card border-t w-full px-2 sm:px-0">
                 <p>🔒 Your data stays private – everything is saved locally in your browser</p>
               </footer>
             </div>

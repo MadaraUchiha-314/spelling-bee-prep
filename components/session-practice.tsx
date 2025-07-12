@@ -339,14 +339,15 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
         <Card>
           <div className="flex items-center p-6">
             <CollapsibleTrigger className="flex flex-1 cursor-pointer items-center justify-between text-left">
-              <CardTitle>
-                Current Word ({currentWordIndex + 1} of {currentSession.wordsAsked.length})
+              <CardTitle className="flex flex-col">
+                <span>Current Word</span>
+                <span className="text-lg font-normal text-muted-foreground">({currentWordIndex + 1} of {currentSession.wordsAsked.length})</span>
               </CardTitle>
               <ChevronDown
                 className={`h-5 w-5 shrink-0 transition-transform duration-300 ${isPracticeOpen ? "rotate-180" : ""}`}
               />
             </CollapsibleTrigger>
-            <div className="flex gap-2 ml-4">
+            <div className="flex flex-wrap gap-2 md:flex-nowrap md:gap-3 ml-0 md:ml-4" style={{ flexFlow: 'wrap' }}>
               <Button
                 variant="outline"
                 size="sm"
@@ -391,7 +392,7 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
                 )}
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
                 <Button
                   variant={wordData?.audioUrl ? "secondary" : "outline"}
                   onClick={handlePronounceClick}
