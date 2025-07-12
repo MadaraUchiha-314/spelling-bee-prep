@@ -506,23 +506,25 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
                         <div
                           key={index}
                           className={`flex items-center justify-between p-3 rounded-lg ${
-                            attempt.isCorrect ? "bg-green-50" : "bg-red-50"
+                            attempt.isCorrect
+                              ? "bg-green-50 dark:bg-green-900"
+                              : "bg-red-50 dark:bg-red-900"
                           }`}
                         >
                           <div className="flex items-center gap-3">
                             {attempt.isCorrect ? (
-                              <CheckCircle className="w-4 h-4 text-green-600" />
+                              <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
                             ) : (
-                              <XCircle className="w-4 h-4 text-red-600" />
+                              <XCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
                             )}
                             <div>
-                              <p className="font-medium">{attempt.word}</p>
+                              <p className={`font-medium ${attempt.isCorrect ? "text-green-900 dark:text-green-100" : "text-red-900 dark:text-red-100"}`}>{attempt.word}</p>
                               {!attempt.isCorrect && attempt.userSpelling && (
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Your spelling: {attempt.userSpelling}</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-300">Your spelling: {attempt.userSpelling}</p>
                               )}
                             </div>
                           </div>
-                          <Badge variant={attempt.isCorrect ? "default" : "destructive"} className="text-xs">
+                          <Badge variant={attempt.isCorrect ? "default" : "destructive"} className={`text-xs ${attempt.isCorrect ? "dark:bg-green-800 dark:text-green-100" : "dark:bg-red-800 dark:text-red-100"}`}>
                             {attempt.isCorrect ? "Correct" : "Incorrect"}
                           </Badge>
                         </div>
