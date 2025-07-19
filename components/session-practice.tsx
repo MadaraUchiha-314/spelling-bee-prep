@@ -304,7 +304,7 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-y-2 gap-x-4">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Trophy className="w-5 h-5" />
@@ -314,23 +314,21 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
                 Word {currentWordIndex + 1} of {currentSession.wordsAsked.length}
               </CardDescription>
             </div>
-
-            <div className="flex gap-4">
+            <div className="flex flex-row sm:flex-row gap-2 sm:gap-4 mt-2 sm:mt-0">
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{currentSession.correctCount}</div>
-                <div className="text-xs text-gray-500">Correct</div>
+                <div className="text-2xl sm:text-3xl font-bold text-green-600">{currentSession.correctCount}</div>
+                <div className="text-base sm:text-xs text-gray-500">Correct</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">{currentSession.incorrectCount}</div>
-                <div className="text-xs text-gray-500">Incorrect</div>
+                <div className="text-2xl sm:text-3xl font-bold text-red-600">{currentSession.incorrectCount}</div>
+                <div className="text-base sm:text-xs text-gray-500">Incorrect</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{Math.round(accuracy)}%</div>
-                <div className="text-xs text-gray-500">Accuracy</div>
+                <div className="text-2xl sm:text-3xl font-bold text-blue-600">{Math.round(accuracy)}%</div>
+                <div className="text-base sm:text-xs text-gray-500">Accuracy</div>
               </div>
             </div>
           </div>
-
           <Progress value={progress} className="w-full mt-4" />
         </CardHeader>
       </Card>
@@ -347,7 +345,7 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
                 className={`h-5 w-5 shrink-0 transition-transform duration-300 ${isPracticeOpen ? "rotate-180" : ""}`}
               />
             </CollapsibleTrigger>
-            <div className="flex flex-wrap gap-2 md:flex-nowrap md:gap-3 ml-0 md:ml-4" style={{ flexFlow: 'wrap' }}>
+            <div className="flex flex-col sm:flex-row flex-wrap gap-y-2 gap-x-3 ml-0 sm:ml-4">
               <Button
                 variant="outline"
                 size="sm"

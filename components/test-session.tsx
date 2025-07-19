@@ -315,9 +315,9 @@ function StatCard({ icon: Icon, label, value, color }: StatCardProps) {
     <div className={`p-4 rounded-lg ${colors[color]}`}>
       <div className="flex items-center gap-2 mb-2">
         <Icon className={`w-4 h-4 ${colors[color].split(" ")[0]}`} />
-        <span className={`text-sm font-medium ${colors[color].split(" ")[0].replace("text-", "text-")}`}>{label}</span>
+        <span className={`text-base sm:text-sm font-medium ${colors[color].split(" ")[0].replace("text-", "text-")}`}>{label}</span>
       </div>
-      <p className="text-2xl font-bold">{value}</p>
+      <p className="text-2xl sm:text-3xl font-bold">{value}</p>
     </div>
   )
 }

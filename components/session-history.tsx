@@ -268,22 +268,22 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
             </CollapsibleTrigger>
             <CollapsibleContent>
               <CardContent className="pt-0">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">{stats.totalSessions}</div>
-                    <div className="text-sm text-blue-800">Total Sessions</div>
+                    <div className="text-2xl sm:text-3xl font-bold text-blue-600">{stats.totalSessions}</div>
+                    <div className="text-base sm:text-sm text-blue-800">Total Sessions</div>
                   </div>
                   <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">{stats.totalCorrect}</div>
-                    <div className="text-sm text-green-800">Words Correct</div>
+                    <div className="text-2xl sm:text-3xl font-bold text-green-600">{stats.totalCorrect}</div>
+                    <div className="text-base sm:text-sm text-green-800">Words Correct</div>
                   </div>
                   <div className="text-center p-4 bg-red-50 rounded-lg">
-                    <div className="text-2xl font-bold text-red-600">{stats.totalIncorrect}</div>
-                    <div className="text-sm text-red-800">Words Incorrect</div>
+                    <div className="text-2xl sm:text-3xl font-bold text-red-600">{stats.totalIncorrect}</div>
+                    <div className="text-base sm:text-sm text-red-800">Words Incorrect</div>
                   </div>
                   <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                    <div className="text-2xl font-bold text-yellow-600">{Math.round(stats.averageAccuracy)}%</div>
-                    <div className="text-sm text-yellow-800">Average Accuracy</div>
+                    <div className="text-2xl sm:text-3xl font-bold text-yellow-600">{Math.round(stats.averageAccuracy)}%</div>
+                    <div className="text-base sm:text-sm text-yellow-800">Average Accuracy</div>
                   </div>
                 </div>
                 {stats.masteredWords.length > 0 && (
@@ -368,15 +368,15 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
                   <p className="text-sm">Complete a test session to see your history here!</p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-3 sm:space-y-0">
                   {sessions.map((session) => (
                     <div
                       key={session.id}
-                      className="flex items-center justify-between p-4 border rounded-lg bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors mb-4 sm:mb-0"
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-medium truncate">{session.name}</h3>
+                          <h3 className="font-medium text-base sm:text-lg break-words whitespace-normal max-w-full sm:truncate">{session.name}</h3>
                           <Badge variant={session.isCompleted ? "default" : "secondary"} className="text-xs">
                             {session.isCompleted ? "Completed" : "In Progress"}
                           </Badge>
@@ -386,7 +386,7 @@ export function SessionHistory({ onResumeSession, onSessionDeleted }: SessionHis
                             </Badge>
                           )}
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 mb-2 dark:text-gray-400">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 mb-2 dark:text-gray-400 pt-2">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             {formatDate(session.startTime)}

@@ -252,11 +252,11 @@ export function SavedWordLists({ lists, availableLists, currentListId, onWordLis
                   {lists.map((list) => (
                     <div
                       key={list.id}
-                      className={`flex items-center justify-between p-4 border rounded-lg bg-card text-card-foreground transition-colors ${list.id === currentListId ? 'border-primary bg-primary/10' : 'hover:bg-muted'}`}
+                      className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg bg-card text-card-foreground transition-colors ${list.id === currentListId ? 'border-primary bg-primary/10' : 'hover:bg-muted'} mb-2 sm:mb-0`}
                     >
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-medium truncate">{list.name}</h3>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-1">
+                          <h3 className="font-medium text-lg sm:text-xl truncate break-words whitespace-normal max-w-full">{list.name}</h3>
                           <Badge variant="secondary" className="text-xs">
                             {list.wordCount} words
                           </Badge>
@@ -285,7 +285,8 @@ export function SavedWordLists({ lists, availableLists, currentListId, onWordLis
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 ml-4">
+                      {/* Action buttons row - make it a separate row on mobile */}
+                      <div className="flex flex-col sm:flex-row gap-y-2 sm:gap-y-0 gap-x-0 sm:gap-x-2 w-full sm:w-auto pt-2 sm:pt-0">
                         <Button
                           variant="outline"
                           size="sm"
@@ -296,7 +297,6 @@ export function SavedWordLists({ lists, availableLists, currentListId, onWordLis
                           <BookOpen className="w-3 h-3" />
                           Use
                         </Button>
-
                         <Button
                           variant="outline"
                           size="sm"
