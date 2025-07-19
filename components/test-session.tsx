@@ -41,9 +41,17 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey, 
   const [error, setError] = useState("")
   const [filteredWords, setFilteredWords] = useState<string[]>([])
   const [isOpen, setIsOpen] = useState(true)
+  const [activeSession, setActiveSession] = useState<TestSession | null>(null)
 
   useEffect(() => {
     loadMasteredWords()
+    // Load any active session on mount
+    const loadActiveSession = async () => {
+      const sessions = await sessionStorage.getAllSessions()
+      const active = sessions.find((s) => !s.isCompleted)
+      setActiveSession(active || null)
+    }
+    loadActiveSession()
   }, [])
 
   useEffect(() => {
@@ -118,6 +126,22 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey, 
       minute: "2-digit",
     })
     setSessionName(`${wordListName} - ${dateStr}`)
+  }
+
+  // Helper to pause the current session (does not mark as completed)
+  const pauseCurrentSession = async () => {
+    if (activeSession) {
+      // Optionally, you could set a paused flag if you want to distinguish paused from just incomplete
+      // For now, just leave as is (not completed)
+      // Optionally, update a timestamp or similar here
+      // await sessionStorage.updateSession({ ...activeSession, ... })
+      // No-op for now
+    }
+  }
+
+  const handleNewSessionClick = async () => {
+    await pauseCurrentSession()
+    setShowStartDialog(true)
   }
 
   if (words.length === 0) {

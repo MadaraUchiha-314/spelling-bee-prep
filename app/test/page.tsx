@@ -6,6 +6,7 @@ import { SessionPractice } from "@/components/session-practice"
 import { useRouter } from "next/navigation"
 import { sessionStorage, type TestSession } from "@/lib/session-storage"
 import { useWordContext } from "@/lib/word-context"
+import { Button } from "@/components/ui/button"
 
 export default function TestPage() {
   const [currentSession, setCurrentSession] = useState<TestSession | null>(null)
@@ -42,21 +43,50 @@ export default function TestPage() {
     router.push('/history')
   }
 
+  const handlePauseSession = () => {
+    setCurrentSession(null)
+  }
+
+  const handleEndSession = async () => {
+    if (currentSession) {
+      await sessionStorage.completeSession(currentSession.id)
+      setCurrentSession(null)
+    }
+  }
+
   const showSessionPractice = currentSession && !currentSession.isCompleted
 
   return (
     <div className="space-y-6">
-          {showSessionPractice ? (
-            <SessionPractice session={currentSession} apiKey={apiKey} onSessionComplete={handleSessionComplete} />
-          ) : (
-            <TestSessionComponent
-              words={words}
-              wordListName={currentListName}
-              wordListId={currentListId}
-              apiKey={apiKey}
-              onSessionStart={handleSessionStart}
-            />
-          )}
+      {showSessionPractice ? (
+        <>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setCurrentSession(null)
+              }}
+            >
+              New Test Session
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleEndSession}
+            >
+              End
+            </Button>
+          </div>
+          <SessionPractice session={currentSession} apiKey={apiKey} onSessionComplete={handleSessionComplete} />
+        </>
+      ) : (
+        <TestSessionComponent
+          words={words}
+          wordListName={currentListName}
+          wordListId={currentListId}
+          apiKey={apiKey}
+          onSessionStart={handleSessionStart}
+        />
+      )}
     </div>
   )
 } 
