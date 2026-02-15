@@ -27,6 +27,8 @@ import {
   Check,
 } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 
 interface WordData {
   word: string
@@ -65,6 +67,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
   const [shuffledWords, setShuffledWords] = useState<string[]>([])
   const [isPracticeOpen, setIsPracticeOpen] = useState(true)
   const [isCopied, setIsCopied] = useState(false)
+  const [isTutorMode, setIsTutorMode] = useState(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
@@ -101,16 +104,30 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
     }
   }, [currentWordIndex, shuffledWords, words])
 
+  useEffect(() => {
+    if (isTutorMode && currentWord) {
+      setShowWord(true)
+      setShowPronunciation(true)
+      setShowDefinition(true)
+      setShowEtymology(true)
+      setShowPartOfSpeech(true)
+      setShowExample(true)
+      if (!wordData) {
+        fetchWordData(currentWord)
+      }
+    }
+  }, [isTutorMode, currentWord])
+
   const resetWordState = () => {
     setWordData(null)
     setUserSpelling("")
     setHasCheckedSpelling(false)
-    setShowDefinition(false)
-    setShowEtymology(false)
-    setShowPartOfSpeech(false)
-    setShowExample(false)
-    setShowWord(false)
-    setShowPronunciation(false)
+    setShowDefinition(isTutorMode)
+    setShowEtymology(isTutorMode)
+    setShowPartOfSpeech(isTutorMode)
+    setShowExample(isTutorMode)
+    setShowWord(isTutorMode)
+    setShowPronunciation(isTutorMode)
     setError("")
   }
 
@@ -330,7 +347,7 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-y-2 gap-x-4">
-            <div>
+            <div className="space-y-2">
               <CardTitle className="flex items-center gap-2">
                 <BookOpen className="w-5 h-5" />
                 Practice Mode
@@ -338,6 +355,20 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
               <CardDescription>
                 Word {currentWordIndex + 1} of {shuffledWords.length > 0 ? shuffledWords.length : words.length}
               </CardDescription>
+              <div className="flex items-center gap-2 pt-1">
+                <Label htmlFor="tutor-mode-practice" className={`text-sm font-medium ${!isTutorMode ? "text-foreground" : "text-muted-foreground"}`}>
+                  Student
+                </Label>
+                <Switch
+                  id="tutor-mode-practice"
+                  checked={isTutorMode}
+                  onCheckedChange={setIsTutorMode}
+                  aria-label="Toggle between Student and Tutor mode"
+                />
+                <Label htmlFor="tutor-mode-practice" className={`text-sm font-medium ${isTutorMode ? "text-foreground" : "text-muted-foreground"}`}>
+                  Tutor
+                </Label>
+              </div>
             </div>
             <div className="flex flex-row sm:flex-row gap-2 sm:gap-4 mt-2 sm:mt-0">
               <div className="text-center">
