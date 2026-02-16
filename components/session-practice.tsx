@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import {
   Volume2,
   BookOpen,
@@ -43,6 +43,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 
 import { sessionStorage, type TestSession, type WordAttempt } from "@/lib/session-storage"
+import { preferencesStorage, PREF_KEYS } from "@/lib/preferences-storage"
 
 interface WordData {
   word: string
@@ -83,9 +84,22 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
   const [isPracticeOpen, setIsPracticeOpen] = useState(true)
   const [isAdvancing, setIsAdvancing] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
-  const [isTutorMode, setIsTutorMode] = useState(false)
+  const [isTutorMode, setIsTutorModeState] = useState(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const lastWordRef = useRef<string>("")
+
+  const setIsTutorMode = useCallback((value: boolean) => {
+    setIsTutorModeState(value)
+    preferencesStorage.set(PREF_KEYS.TUTOR_MODE, value).catch((err) =>
+      console.error("Failed to persist tutor mode:", err)
+    )
+  }, [])
+
+  useEffect(() => {
+    preferencesStorage.get<boolean>(PREF_KEYS.TUTOR_MODE).then((saved) => {
+      if (saved !== null) setIsTutorModeState(saved)
+    })
+  }, [])
 
   useEffect(() => {
     // Cleanup timeout on unmount

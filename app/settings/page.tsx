@@ -1,26 +1,27 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ApiKeyManager } from "@/components/api-key-manager"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { ChevronDown } from "lucide-react"
+import { preferencesStorage, PREF_KEYS } from "@/lib/preferences-storage"
 
 export default function SettingsPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(true)
   const [apiKey, setApiKey] = useState<string>("")
 
-  // Load API key from localStorage on component mount
-  if (typeof window !== 'undefined') {
-    const savedApiKey = localStorage.getItem("spelling-bee-api-key")
-    if (savedApiKey && !apiKey) {
-      setApiKey(savedApiKey)
-    }
-  }
+  useEffect(() => {
+    preferencesStorage.get(PREF_KEYS.API_KEY).then((saved) => {
+      if (saved) setApiKey(saved)
+    })
+  }, [])
 
   const handleApiKeySaved = (key: string) => {
     setApiKey(key)
-    localStorage.setItem("spelling-bee-api-key", key)
+    preferencesStorage.set(PREF_KEYS.API_KEY, key).catch((err) =>
+      console.error("Failed to persist API key:", err)
+    )
   }
 
   return (

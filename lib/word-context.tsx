@@ -1,7 +1,8 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import { wordListStorage, type AvailableWordList } from '@/lib/word-list-storage'
+import { preferencesStorage, PREF_KEYS } from '@/lib/preferences-storage'
 
 interface WordContextType {
   words: string[]
@@ -25,12 +26,46 @@ export function WordProvider({ children }: { children: ReactNode }) {
   const [currentListId, setCurrentListId] = useState<string>("")
   const [availableLists, setAvailableLists] = useState<AvailableWordList[]>([])
 
+  const persistListId = useCallback((id: string) => {
+    setCurrentListId(id)
+    preferencesStorage.set(PREF_KEYS.SELECTED_LIST_ID, id).catch((err) =>
+      console.error("Failed to persist selected list id:", err)
+    )
+  }, [])
+
   const loadAvailableLists = async () => {
     try {
       const lists = await wordListStorage.getAvailableWordLists()
       setAvailableLists(lists)
     } catch (err) {
       console.error("Failed to load available lists:", err)
+    }
+  }
+
+  const loadSavedOrDefaultWordList = async () => {
+    try {
+      const savedListId = await preferencesStorage.get(PREF_KEYS.SELECTED_LIST_ID)
+
+      if (savedListId) {
+        const savedList = await wordListStorage.getWordList(savedListId)
+        if (savedList) {
+          setWords(savedList.words)
+          setFilteredWords(savedList.words)
+          setCurrentListName(savedList.name)
+          setCurrentListId(savedList.id)
+          return
+        }
+      }
+
+      const defaultList = await wordListStorage.loadDefaultWordList()
+      if (defaultList) {
+        setWords(defaultList.words)
+        setFilteredWords(defaultList.words)
+        setCurrentListName(defaultList.name)
+        persistListId(defaultList.id)
+      }
+    } catch (err) {
+      console.error("Failed to load word list:", err)
     }
   }
 
@@ -41,7 +76,7 @@ export function WordProvider({ children }: { children: ReactNode }) {
         setWords(defaultList.words)
         setFilteredWords(defaultList.words)
         setCurrentListName(defaultList.name)
-        setCurrentListId(defaultList.id)
+        persistListId(defaultList.id)
       }
     } catch (err) {
       console.error("Failed to load default word list:", err)
@@ -50,7 +85,7 @@ export function WordProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     loadAvailableLists()
-    loadDefaultWordList()
+    loadSavedOrDefaultWordList()
   }, [])
 
   const value = {
@@ -62,7 +97,7 @@ export function WordProvider({ children }: { children: ReactNode }) {
     setWords,
     setFilteredWords,
     setCurrentListName,
-    setCurrentListId,
+    setCurrentListId: persistListId,
     loadDefaultWordList,
   }
 

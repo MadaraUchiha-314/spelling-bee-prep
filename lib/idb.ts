@@ -3,6 +3,9 @@ import { DB_NAME, DB_VERSION } from "./db-constants"
 const WORD_LISTS_STORE = "wordLists"
 const TEST_SESSIONS_STORE = "testSessions"
 const SESSION_STATS_STORE = "sessionStats"
+const PREFERENCES_STORE = "preferences"
+
+export { PREFERENCES_STORE }
 
 export function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -30,6 +33,10 @@ export function openDatabase(): Promise<IDBDatabase> {
 
       if (!db.objectStoreNames.contains(SESSION_STATS_STORE)) {
         db.createObjectStore(SESSION_STATS_STORE, { keyPath: "id" })
+      }
+
+      if (!db.objectStoreNames.contains(PREFERENCES_STORE)) {
+        db.createObjectStore(PREFERENCES_STORE, { keyPath: "key" })
       }
     }
   })

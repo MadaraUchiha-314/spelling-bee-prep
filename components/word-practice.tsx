@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -30,6 +30,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
+import { preferencesStorage, PREF_KEYS } from "@/lib/preferences-storage"
 
 interface WordData {
   word: string
@@ -68,8 +69,21 @@ export function WordPractice({ words, apiKey }: WordPracticeProps) {
   const [shuffledWords, setShuffledWords] = useState<string[]>([])
   const [isPracticeOpen, setIsPracticeOpen] = useState(true)
   const [isCopied, setIsCopied] = useState(false)
-  const [isTutorMode, setIsTutorMode] = useState(false)
+  const [isTutorMode, setIsTutorModeState] = useState(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  const setIsTutorMode = useCallback((value: boolean) => {
+    setIsTutorModeState(value)
+    preferencesStorage.set(PREF_KEYS.TUTOR_MODE, value).catch((err) =>
+      console.error("Failed to persist tutor mode:", err)
+    )
+  }, [])
+
+  useEffect(() => {
+    preferencesStorage.get<boolean>(PREF_KEYS.TUTOR_MODE).then((saved) => {
+      if (saved !== null) setIsTutorModeState(saved)
+    })
+  }, [])
 
   useEffect(() => {
     // Cleanup timeout on unmount

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { sessionStorage, type TestSession } from "@/lib/session-storage"
 import { useWordContext } from "@/lib/word-context"
 import { Button } from "@/components/ui/button"
+import { preferencesStorage, PREF_KEYS } from "@/lib/preferences-storage"
 
 export default function TestPage() {
   const [currentSession, setCurrentSession] = useState<TestSession | null>(null)
@@ -15,10 +16,9 @@ export default function TestPage() {
   const { words, currentListName, currentListId } = useWordContext()
 
   useEffect(() => {
-    const savedApiKey = localStorage.getItem("spelling-bee-api-key")
-    if (savedApiKey) {
-      setApiKey(savedApiKey)
-    }
+    preferencesStorage.get(PREF_KEYS.API_KEY).then((saved) => {
+      if (saved) setApiKey(saved)
+    })
     loadActiveSession()
   }, [])
 

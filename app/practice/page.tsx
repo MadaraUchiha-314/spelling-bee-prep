@@ -7,6 +7,7 @@ import { WordPractice } from "@/components/word-practice"
 import { WordFilter } from "@/components/word-filter"
 import { BookOpen } from "lucide-react"
 import { useWordContext } from "@/lib/word-context"
+import { preferencesStorage, PREF_KEYS } from "@/lib/preferences-storage"
 
 export default function PracticePage() {
   const [apiKey, setApiKey] = useState<string>("")
@@ -20,10 +21,9 @@ export default function PracticePage() {
   } = useWordContext()
 
   useEffect(() => {
-    const savedApiKey = localStorage.getItem("spelling-bee-api-key")
-    if (savedApiKey) {
-      setApiKey(savedApiKey)
-    }
+    preferencesStorage.get(PREF_KEYS.API_KEY).then((saved) => {
+      if (saved) setApiKey(saved)
+    })
   }, [])
 
   const handleWordsFiltered = (filtered: string[]) => {
