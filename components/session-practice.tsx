@@ -20,6 +20,7 @@ import {
   ChevronDown,
   Copy,
   Check,
+  ExternalLink,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -416,7 +417,17 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
             <CardContent className="pt-0 space-y-6">
               <div className="text-center">
                 {showWord ? (
-                  <div className="text-4xl font-bold text-blue-600 mb-4">{currentWord}</div>
+                  <div className="text-4xl font-bold text-blue-600 mb-4">
+                    <a
+                      href={`https://www.merriam-webster.com/dictionary/${encodeURIComponent(currentWord)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 hover:underline"
+                    >
+                      {currentWord}
+                      <ExternalLink className="w-5 h-5" />
+                    </a>
+                  </div>
                 ) : (
                   <div className="text-2xl text-gray-400 mb-4">Word Hidden – use the clue buttons</div>
                 )}
