@@ -22,5 +22,23 @@
     "name": "Scripps National Spelling Bee 2020 - Three Bee",
     "path": "/data/word-lists/scripps/2020/three-bee/word_list.txt",
     "description": "Hard level words (1,052 words) from the official Scripps National Spelling Bee 2020 study guide"
+  },
+  {
+    "id": "scripps-2026-one-bee",
+    "name": "Scripps National Spelling Bee 2026 - One Bee",
+    "path": "/data/word-lists/scripps/2026/one-bee/word_list.txt",
+    "description": "Easy level words (1,003 words) from the official Scripps National Spelling Bee 2026 study guide"
+  },
+  {
+    "id": "scripps-2026-two-bee",
+    "name": "Scripps National Spelling Bee 2026 - Two Bee",
+    "path": "/data/word-lists/scripps/2026/two-bee/word_list.txt",
+    "description": "Medium level words (2,022 words) from the official Scripps National Spelling Bee 2026 study guide"
+  },
+  {
+    "id": "scripps-2026-three-bee",
+    "name": "Scripps National Spelling Bee 2026 - Three Bee",
+    "path": "/data/word-lists/scripps/2026/three-bee/word_list.txt",
+    "description": "Hard level words (991 words) from the official Scripps National Spelling Bee 2026 study guide"
   }
 ] 
