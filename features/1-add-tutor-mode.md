@@ -1,0 +1,6 @@
+- Add a toggle for tutor mode in both test and practise mode
+    - There will be two modes:
+        - Tutor Mode
+        - Student Mode
+- In tutor mode, every information regarding the work like phonetic, definition, etymology etc will be visibile by default
+- This is so that the user doesn't have to click on each button to reveal the information

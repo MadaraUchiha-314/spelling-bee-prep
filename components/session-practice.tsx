@@ -38,6 +38,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 
 import { sessionStorage, type TestSession, type WordAttempt } from "@/lib/session-storage"
 
@@ -80,6 +82,7 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
   const [isPracticeOpen, setIsPracticeOpen] = useState(true)
   const [isAdvancing, setIsAdvancing] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
+  const [isTutorMode, setIsTutorMode] = useState(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const lastWordRef = useRef<string>("")
 
@@ -101,12 +104,12 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
     setIsAdvancing(false)
 
     setWordData(null)
-    setShowDefinition(false)
-    setShowEtymology(false)
-    setShowPartOfSpeech(false)
-    setShowExample(false)
-    setShowPronunciation(false)
-    setShowWord(false)
+    setShowDefinition(isTutorMode)
+    setShowEtymology(isTutorMode)
+    setShowPartOfSpeech(isTutorMode)
+    setShowExample(isTutorMode)
+    setShowPronunciation(isTutorMode)
+    setShowWord(isTutorMode)
   }
 
   useEffect(() => {
@@ -118,6 +121,20 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentWordIndex, currentSession.wordsAsked])
+
+  useEffect(() => {
+    if (isTutorMode && currentWord) {
+      setShowWord(true)
+      setShowPronunciation(true)
+      setShowDefinition(true)
+      setShowEtymology(true)
+      setShowPartOfSpeech(true)
+      setShowExample(true)
+      if (!wordData) {
+        fetchWordData(currentWord)
+      }
+    }
+  }, [isTutorMode, currentWord])
 
   const fetchWordData = async (word: string): Promise<WordData | null> => {
     if (!apiKey) {
@@ -305,7 +322,7 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-y-2 gap-x-4">
-            <div>
+            <div className="space-y-2">
               <CardTitle className="flex items-center gap-2">
                 <Trophy className="w-5 h-5" />
                 {currentSession.name}
@@ -313,6 +330,20 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
               <CardDescription>
                 Word {currentWordIndex + 1} of {currentSession.wordsAsked.length}
               </CardDescription>
+              <div className="flex items-center gap-2 pt-1">
+                <Label htmlFor="tutor-mode-test" className={`text-sm font-medium ${!isTutorMode ? "text-foreground" : "text-muted-foreground"}`}>
+                  Student
+                </Label>
+                <Switch
+                  id="tutor-mode-test"
+                  checked={isTutorMode}
+                  onCheckedChange={setIsTutorMode}
+                  aria-label="Toggle between Student and Tutor mode"
+                />
+                <Label htmlFor="tutor-mode-test" className={`text-sm font-medium ${isTutorMode ? "text-foreground" : "text-muted-foreground"}`}>
+                  Tutor
+                </Label>
+              </div>
             </div>
             <div className="flex flex-row sm:flex-row gap-2 sm:gap-4 mt-2 sm:mt-0">
               <div className="text-center">
