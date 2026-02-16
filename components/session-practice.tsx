@@ -84,7 +84,7 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
   const [isPracticeOpen, setIsPracticeOpen] = useState(true)
   const [isAdvancing, setIsAdvancing] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
-  const [isTutorMode, setIsTutorModeState] = useState(false)
+  const [isTutorMode, setIsTutorModeState] = useState(session.mode === "tutor")
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const lastWordRef = useRef<string>("")
 
@@ -93,12 +93,6 @@ export function SessionPractice({ session, apiKey, onSessionComplete }: SessionP
     preferencesStorage.set(PREF_KEYS.TUTOR_MODE, value).catch((err) =>
       console.error("Failed to persist tutor mode:", err)
     )
-  }, [])
-
-  useEffect(() => {
-    preferencesStorage.get<boolean>(PREF_KEYS.TUTOR_MODE).then((saved) => {
-      if (saved !== null) setIsTutorModeState(saved)
-    })
   }, [])
 
   useEffect(() => {

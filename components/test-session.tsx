@@ -17,8 +17,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Play, Settings, Trophy, Target, CheckCircle, Clock, ChevronDown } from "lucide-react"
-import { sessionStorage, type TestSession } from "@/lib/session-storage"
+import { Play, Settings, Trophy, Target, CheckCircle, Clock, ChevronDown, GraduationCap, User } from "lucide-react"
+import { sessionStorage, type TestSession, type SessionMode } from "@/lib/session-storage"
 import { WordFilter } from "@/components/word-filter"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
@@ -35,6 +35,7 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey, 
   const [sessionName, setSessionName] = useState("")
   const [excludePreviouslyCorrect, setExcludePreviouslyCorrect] = useState(true)
   const [randomizeWords, setRandomizeWords] = useState(true)
+  const [sessionMode, setSessionMode] = useState<SessionMode>("student")
   const [availableWords, setAvailableWords] = useState<string[]>([])
   const [masteredWords, setMasteredWords] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
@@ -101,6 +102,7 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey, 
         wordListName,
         wordsForSession,
         excludePreviouslyCorrect,
+        sessionMode,
         wordListId,
       )
 
@@ -206,6 +208,43 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey, 
                   description="Skip words you've spelled correctly in previous sessions"
                 />
 
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Session Mode</Label>
+                  <p className="text-sm text-gray-500">Choose how you want to practice during the session</p>
+                  <div className="flex gap-3 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setSessionMode("student")}
+                      className={`flex-1 flex items-center gap-3 p-3 rounded-lg border-2 transition-colors cursor-pointer ${
+                        sessionMode === "student"
+                          ? "border-blue-500 bg-blue-50 text-blue-700"
+                          : "border-gray-200 hover:border-gray-300 text-gray-600"
+                      }`}
+                    >
+                      <User className="w-5 h-5 shrink-0" />
+                      <div className="text-left">
+                        <div className="font-medium text-sm">Student</div>
+                        <div className="text-xs opacity-75">Type the spelling yourself</div>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSessionMode("tutor")}
+                      className={`flex-1 flex items-center gap-3 p-3 rounded-lg border-2 transition-colors cursor-pointer ${
+                        sessionMode === "tutor"
+                          ? "border-purple-500 bg-purple-50 text-purple-700"
+                          : "border-gray-200 hover:border-gray-300 text-gray-600"
+                      }`}
+                    >
+                      <GraduationCap className="w-5 h-5 shrink-0" />
+                      <div className="text-left">
+                        <div className="font-medium text-sm">Tutor</div>
+                        <div className="text-xs opacity-75">Word & clues shown, mark correct/wrong</div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
                 {excludePreviouslyCorrect && masteredWords.length > 0 && (
                   <Alert>
                     <AlertDescription>
@@ -271,6 +310,9 @@ export function TestSessionComponent({ words, wordListName, wordListId, apiKey, 
                 <Detail label="Words to Practice" value={availableWords.length} />
               </div>
               <div className="flex flex-wrap gap-2">
+                <Badge variant="secondary" className="text-xs">
+                  {sessionMode === "tutor" ? "Tutor mode" : "Student mode"}
+                </Badge>
                 {randomizeWords && (
                   <Badge variant="secondary" className="text-xs">
                     Randomized order

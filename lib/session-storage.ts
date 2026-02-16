@@ -1,5 +1,7 @@
 import { openDatabase } from "./idb"
 
+export type SessionMode = "student" | "tutor"
+
 export interface WordAttempt {
   word: string
   userSpelling: string
@@ -21,6 +23,7 @@ export interface TestSession {
   incorrectCount: number
   totalWords: number
   excludePreviouslyCorrect: boolean
+  mode: SessionMode
 }
 
 export interface SessionStats {
@@ -45,6 +48,7 @@ class SessionStorage {
     wordListName: string,
     wordsToAsk: string[],
     excludePreviouslyCorrect: boolean,
+    mode: SessionMode,
     wordListId?: string,
   ) {
     const db = await this.db()
@@ -62,6 +66,7 @@ class SessionStorage {
       incorrectCount: 0,
       totalWords: wordsToAsk.length,
       excludePreviouslyCorrect,
+      mode,
     }
 
     return new Promise<string>((resolve, reject) => {
@@ -200,6 +205,7 @@ class SessionStorage {
       isCompleted: sessionData.isCompleted,
       // If the original session was completed, set a new end time for the import record
       endTime: sessionData.isCompleted ? new Date() : undefined,
+      mode: sessionData.mode || "student",
     }
 
     return new Promise<void>((resolve, reject) => {
